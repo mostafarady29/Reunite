@@ -6,8 +6,10 @@ The project is split by responsibility: the frontend is the public and member-fa
 
 ## Project map
 
-- `Frontend/` — the experience people see and use.
-- `Backend/` — authentication, reports, comments, storage, and API coordination.
+- `Frontend/` — the web experience people see and use.
+- `mobile/` — the cross-platform Flutter mobile application.
+- `backend-node/` — unified production Node.js API server (Fastify, TypeScript, CoALA Agent Memory, and dual Web/Mobile compatibility).
+- `Backend/` — Python FastAPI service prototype.
 - `AI/` — the image embedding service used for photo similarity search.
 - `Database/` — the relational schema that gives the network its memory.
 

@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: reunite-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: reunite
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./Database/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d reunite"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Reunite Node.js Backend API
+  backend:
+    build:
+      context: ./backend-node
+      dockerfile: Dockerfile
+    container_name: reunite-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      NODE_ENV: development
+      PORT: 8000
+      HOST: 0.0.0.0
+      DATABASE_URL: postgresql://postgres:password123@postgres:5432/reunite
+      FRONTEND_URL: http://localhost:5173,http://localhost:3000
+      JWT_SECRET: reunite-super-secure-jwt-secret-key-2025
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-Photos}
+      AI_SERVICE_URL: http://ai:7860
+      AI_SPACE: Eureka-up/Reunite-AI
+      EMBEDDING_DIM: 512
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # 3. AI Service (PyTorch Siamese Visual Encoder)
+  ai:
+    build:
+      context: ./AI
+      dockerfile: Dockerfile
+    container_name: reunite-ai
+    restart: unless-stopped
+    ports:
+      - "7860:7860"
+    environment:
+      PORT: 7860
+
+  # 4. Web Frontend
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: reunite-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8000/api
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
