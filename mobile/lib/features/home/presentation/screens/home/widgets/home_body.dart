@@ -24,7 +24,7 @@ class HomeBody extends StatelessWidget {
           emergency: emergency,
           nearby: nearby,
           stats: stats,
-          hasLocation: userLocation != null,
+          userLocation: userLocation,
         ),
       _ => const SizedBox(),
     };

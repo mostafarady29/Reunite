@@ -24,12 +24,19 @@ class SectionHeader extends StatelessWidget {
 }
 
 class ReportsBento extends StatelessWidget {
-  const ReportsBento({super.key});
+  const ReportsBento({
+    super.key,
+    this.missingCount = 0,
+    this.foundCount = 0,
+  });
+  final int missingCount;
+  final int foundCount;
+
   @override
   Widget build(BuildContext context) {
     final items = [
-      (Icons.person_search_rounded, context.tr('profile.reportsMissing'), '7', AppColors.primary, AppColors.primary.withValues(alpha: 0.10), context.tr('profile.reportsMissingSub')),
-      (Icons.check_circle_rounded, context.tr('profile.reportsFound'), '4', AppColors.success, AppColors.successSoft, context.tr('profile.reportsFoundSub')),
+      (Icons.person_search_rounded, context.tr('profile.reportsMissing'), '$missingCount', AppColors.primary, AppColors.primary.withValues(alpha: 0.10), context.tr('profile.reportsMissingSub')),
+      (Icons.check_circle_rounded, context.tr('profile.reportsFound'), '$foundCount', AppColors.success, AppColors.successSoft, context.tr('profile.reportsFoundSub')),
     ];
     return GridView.builder(
       shrinkWrap: true,

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../../../../core/router/app_router.dart';
+import '../../../../../../../core/services/location_service.dart';
 import '../../../../../../../core/theme/app_colors.dart';
 import '../../../../../../../core/theme/app_dimens.dart';
 import '../../../../../../../core/utils/distance_format.dart';
@@ -13,8 +14,13 @@ import '../modern_empty.dart';
 import '../modern_section_header.dart';
 
 class EmergencySection extends StatelessWidget {
-  const EmergencySection({super.key, required this.emergency});
+  const EmergencySection({
+    super.key,
+    required this.emergency,
+    this.userLocation,
+  });
   final List<ChildCase> emergency;
+  final LatLng? userLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +57,14 @@ class EmergencySection extends StatelessWidget {
               separatorBuilder: (_, _) => const SizedBox(width: 14),
               itemBuilder: (context, i) {
                 final c = emergency[i];
+                String? dist;
+                if (userLocation != null && c.coordinates != null) {
+                  final meters = userLocation!.distanceMetersTo(c.coordinates!);
+                  dist = DistanceFormat.format(meters);
+                }
                 return EmergencyCarouselCard(
                   caseData: c,
-                  distanceLabel: DistanceFormat.format(3000),
+                  distanceLabel: dist,
                   onTap: () => context.router.push(ChildDetailsRoute(caseId: c.id)),
                 )
                     .animate()

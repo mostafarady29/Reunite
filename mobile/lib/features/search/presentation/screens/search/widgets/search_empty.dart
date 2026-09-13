@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../../../core/di/app_di.dart';
+import '../../../../../../core/locations/location_models.dart';
+import '../../../../../../core/locations/locations_repository.dart';
 import '../../../../../../core/theme/app_dimens.dart';
 import '../../../../../../core/utils/context_extensions.dart';
 import '../../../../../../core/widgets/widgets.dart';
-import '../../../../../reports/data/mock/demo_data.dart';
 import '../../../search_cubit.dart';
 
 class SearchEmptyView extends StatelessWidget {
@@ -49,17 +51,33 @@ class SearchEmptyView extends StatelessWidget {
             ),
             const SizedBox(height: AppDimens.xxl),
           ],
-          Text(context.tr('search.popularAreas'),
-              style: context.textTheme.titleMedium),
-          const SizedBox(height: AppDimens.md),
-          ...DemoData.popularAreas.map((area) {
-            return ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.location_on_outlined, size: 20),
-              title: Text(area),
-              onTap: () => context.read<SearchCubit>().search(area),
-            );
-          }),
+          FutureBuilder<List<Governorate>>(
+            future: getIt<LocationsRepository>().getGovernorates(),
+            builder: (context, snapshot) {
+              final areas = (snapshot.data ?? const <Governorate>[])
+                  .map((g) => g.name)
+                  .where((n) => n.isNotEmpty)
+                  .take(6)
+                  .toList();
+              if (areas.isEmpty) return const SizedBox();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(context.tr('search.popularAreas'),
+                      style: context.textTheme.titleMedium),
+                  const SizedBox(height: AppDimens.md),
+                  ...areas.map((area) {
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(Icons.location_on_outlined, size: 20),
+                      title: Text(area),
+                      onTap: () => context.read<SearchCubit>().search(area),
+                    );
+                  }),
+                ],
+              );
+            },
+          ),
           const SizedBox(height: AppDimens.xl),
           EmptyState(
             title: context.tr('search.empty'),

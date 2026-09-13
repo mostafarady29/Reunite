@@ -62,8 +62,8 @@ class EditProfileViewState extends State<EditProfileView> {
   Widget build(BuildContext context) {
     final state = context.watch<ProfileCubit>().state;
     if (state is ProfileLoaded) {
-      if (_initialName.isEmpty) {
-        _initialName = state.user.fullName.isNotEmpty ? state.user.fullName : 'عمر حسن';
+      if (_initialName.isEmpty && state.user.fullName.isNotEmpty) {
+        _initialName = state.user.fullName;
         _name.text = _initialName;
       }
       if (_initialPhone.isEmpty && state.user.phone != null) {

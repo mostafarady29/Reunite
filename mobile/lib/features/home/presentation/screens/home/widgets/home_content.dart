@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../../../core/services/location_service.dart';
 import '../../../../../../features/reports/data/repositories/child_case_repository.dart';
 import '../../../../../../features/reports/domain/child_case.dart';
 import 'sections/emergency_section.dart';
@@ -12,13 +13,13 @@ class HomeContent extends StatelessWidget {
     required this.emergency,
     required this.nearby,
     required this.stats,
-    required this.hasLocation,
+    this.userLocation,
   });
 
   final List<ChildCase> emergency;
   final List<ChildCase> nearby;
   final CaseStatistics stats;
-  final bool hasLocation;
+  final LatLng? userLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +30,9 @@ class HomeContent extends StatelessWidget {
         children: [
           StatsSection(stats: stats),
           const SizedBox(height: 28),
-          EmergencySection(emergency: emergency),
+          EmergencySection(emergency: emergency, userLocation: userLocation),
           const SizedBox(height: 28),
-          NearbySection(nearby: nearby, hasLocation: hasLocation),
+          NearbySection(nearby: nearby, hasLocation: userLocation != null),
         ],
       ),
     );

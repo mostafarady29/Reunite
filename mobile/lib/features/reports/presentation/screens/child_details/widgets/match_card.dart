@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/utils/context_extensions.dart';
+import '../../../../../../core/widgets/widgets.dart';
 import '../../../../data/repositories/child_case_repository.dart';
 
 /// Single possible-match card, extracted from `matches_section.dart`.
@@ -21,16 +22,18 @@ class MatchModernCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.10),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.child_care_rounded,
-              color: AppColors.primary,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: ChildPhoto(
+                seed: f.locality,
+                imagePath: f.photoPath,
+                size: 48,
+                radius: 0,
+                borderRadius: BorderRadius.circular(14),
+              ),
             ),
           ),
           const SizedBox(width: 12),

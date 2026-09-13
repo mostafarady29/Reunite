@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../../../core/theme/app_colors.dart';
@@ -40,9 +41,10 @@ class HeroBackdrop extends StatelessWidget {
           children: [
             Positioned.fill(
               child: Opacity(
-                opacity: 0.28,
+                opacity: 0.38,
                 child: ChildPhoto(
                   seed: caseData.locality,
+                  imagePath: caseData.photoPath,
                   size: 380,
                   borderRadius: BorderRadius.zero,
                 ),
@@ -112,10 +114,10 @@ class HeroBackdrop extends StatelessWidget {
                         color: Colors.white.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(100)),
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      const Icon(Icons.remove_red_eye_outlined,
+                      Icon(caseData.verified ? Icons.verified_rounded : Icons.access_time_rounded,
                           size: 13, color: Colors.white),
                       const SizedBox(width: 4),
-                      Text('1.2k views',
+                      Text(caseData.verified ? context.tr('status.verified') : context.tr('status.${caseData.status.name}'),
                           style: context.textTheme.labelSmall?.copyWith(
                               color: Colors.white,
                               fontSize: 11,

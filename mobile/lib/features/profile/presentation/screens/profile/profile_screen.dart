@@ -8,6 +8,7 @@ import '../../../../../core/di/app_di.dart';
 import '../../../../../core/router/app_router.dart';
 import '../../../../../core/settings/settings_cubit.dart';
 import '../../../../../core/utils/context_extensions.dart';
+import '../../../../reports/data/repositories/child_case_repository.dart';
 import '../../../../auth/data/auth_repository.dart';
 import '../../../../auth/domain/user.dart';
 import '../../profile_cubit.dart';
@@ -24,7 +25,12 @@ class ProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => ProfileCubit(getIt<AuthRepository>())..load()),
+        BlocProvider(
+          create: (_) => ProfileCubit(
+            getIt<AuthRepository>(),
+            getIt<ReportsRepository>(),
+          )..load(),
+        ),
         BlocProvider.value(value: getIt<AppSettingsCubit>()),
       ],
       child: const ModernProfileView(),
@@ -39,6 +45,10 @@ class ModernProfileView extends StatelessWidget {
   Widget build(BuildContext context) {
     final state = context.watch<ProfileCubit>().state;
     final User? user = state is ProfileLoaded ? state.user : null;
+    final int reportsCount = state is ProfileLoaded ? state.reportsCount : 0;
+    final int helpedCount = state is ProfileLoaded ? state.findingsCount : 0;
+    final int missingCount = state is ProfileLoaded ? state.missingCount : 0;
+    final int foundCount = state is ProfileLoaded ? state.foundCount : 0;
 
     return Scaffold(
       backgroundColor: context.palette.background,
@@ -75,14 +85,20 @@ class ModernProfileView extends StatelessWidget {
             sliver: SliverList.list(
               children: [
                 // ── Hero Profile Card ──
-                HeroProfileCard(user: user).animate().fadeIn(duration: 380.ms).slideY(begin: 0.06),
+                HeroProfileCard(
+                  user: user,
+                  reportsCount: reportsCount,
+                  helpedCount: helpedCount,
+                ).animate().fadeIn(duration: 380.ms).slideY(begin: 0.06),
                 const SizedBox(height: 22),
 
                 // ── My Reports — only Missing & Found ──
                 SectionHeader(icon: Icons.folder_rounded, title: context.tr('profile.myReports'), subtitle: context.tr('profile.reportsSubtitle')),
                 const SizedBox(height: 10),
-                const ReportsBento().animate().fadeIn(delay: 120.ms).slideY(begin: 0.04),
-                // const SizedBox(height: 10),
+                ReportsBento(
+                  missingCount: missingCount,
+                  foundCount: foundCount,
+                ).animate().fadeIn(delay: 120.ms).slideY(begin: 0.04),
 
                 // ── Preferences ──
                 const SectionHeader(icon: Icons.tune_rounded, title: 'Preferences', subtitle: 'App experience'),
@@ -98,8 +114,6 @@ class ModernProfileView extends StatelessWidget {
 
                 // ── Logout ──
                 const ModernLogout().animate().fadeIn(delay: 240.ms),
-                const SizedBox(height: 16),
-                Text(context.tr('demo.notice'), textAlign: TextAlign.center, style: context.textTheme.bodySmall?.copyWith(color: context.palette.textMuted, fontSize: 11, height: 1.4)),
               ],
             ),
           ),

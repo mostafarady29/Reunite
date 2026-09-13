@@ -83,7 +83,7 @@ class GridCard extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-                    child: SizedBox(height: 112, width: double.infinity, child: ChildPhoto(seed: caseData.locality, size: 112, radius: 0, borderRadius: const BorderRadius.vertical(top: Radius.circular(18)))),
+                    child: SizedBox(height: 112, width: double.infinity, child: ChildPhoto(seed: caseData.locality, imagePath: caseData.photoPath, size: 112, radius: 0, borderRadius: const BorderRadius.vertical(top: Radius.circular(18)))),
                   ),
                   if (distanceLabel != null)
                     Positioned(

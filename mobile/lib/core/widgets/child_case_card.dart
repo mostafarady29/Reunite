@@ -37,7 +37,7 @@ class ChildCaseCard extends StatelessWidget {
               // Photo — clean rounded square, no urgent dot
               ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                child: SizedBox(width: 76, height: 76, child: ChildPhoto(seed: caseData.locality, size: 76, radius: 0, borderRadius: BorderRadius.circular(14))),
+                child: SizedBox(width: 76, height: 76, child: ChildPhoto(seed: caseData.locality, imagePath: caseData.photoPath, size: 76, radius: 0, borderRadius: BorderRadius.circular(14))),
               ),
               const SizedBox(width: 13),
               // Info

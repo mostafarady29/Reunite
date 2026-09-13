@@ -39,7 +39,7 @@ class EmergencyCarouselCard extends StatelessWidget {
                     child: SizedBox(
                       height: 124,
                       width: double.infinity,
-                      child: ChildPhoto(seed: caseData.locality, size: 124, radius: 100),
+                      child: ChildPhoto(seed: caseData.locality, imagePath: caseData.photoPath, size: 124, radius: 100),
                     ),
                   ),
                   if (distanceLabel != null)

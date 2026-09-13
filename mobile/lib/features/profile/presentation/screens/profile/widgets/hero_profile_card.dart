@@ -10,14 +10,29 @@ import 'hero_meta.dart';
 import 'pill_mini.dart';
 
 class HeroProfileCard extends StatelessWidget {
-  const HeroProfileCard({super.key, required this.user});
+  const HeroProfileCard({
+    super.key,
+    required this.user,
+    this.reportsCount = 0,
+    this.helpedCount = 0,
+  });
   final User? user;
+  final int reportsCount;
+  final int helpedCount;
 
   @override
   Widget build(BuildContext context) {
-    final name = user?.fullName ?? 'Omar Hassan';
-    final email = user?.email ?? 'omar@example.com';
-    final initial = name.isEmpty ? 'ع' : name.trim()[0].toUpperCase();
+    final isGuest = user == null || user!.id == 'guest';
+    final name = !isGuest && user!.fullName.isNotEmpty
+        ? user!.fullName
+        : context.tr('auth.guest');
+    final email = user?.email?.isNotEmpty == true
+        ? user!.email!
+        : (user?.phone?.isNotEmpty == true ? user!.phone! : '');
+    final location = user?.city?.isNotEmpty == true
+        ? user!.city!
+        : context.tr('profile.heroLocation');
+    final initial = name.isEmpty ? '؟' : name.trim()[0].toUpperCase();
 
     return Container(
       decoration: BoxDecoration(
@@ -68,14 +83,16 @@ class HeroProfileCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w900, height: 1.1)),
-                            const SizedBox(height: 3),
-                            Text(email, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.78), fontSize: 12)),
+                            if (email.isNotEmpty) ...[
+                              const SizedBox(height: 3),
+                              Text(email, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.78), fontSize: 12)),
+                            ],
                             const SizedBox(height: 7),
                             Row(
                               children: [
                                 PillMini(icon: Icons.verified_rounded, label: context.tr('profile.heroVerified')),
                                 const SizedBox(width: 6),
-                                PillMini(icon: Icons.location_on_rounded, label: context.tr('profile.heroLocation')),
+                                PillMini(icon: Icons.location_on_rounded, label: location),
                               ],
                             ),
                           ],
@@ -105,9 +122,9 @@ class HeroProfileCard extends StatelessWidget {
                     decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.10), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white.withValues(alpha: 0.12))),
                     child: Row(
                       children: [
-                        HeroMeta(label: context.tr('profile.heroReports'), value: '12', icon: Icons.description_outlined),
+                        HeroMeta(label: context.tr('profile.heroReports'), value: '$reportsCount', icon: Icons.description_outlined),
                         Container(width: 1, height: 36, color: Colors.white.withValues(alpha: 0.12)),
-                        HeroMeta(label: context.tr('profile.heroHelped'), value: '8', icon: Icons.favorite_rounded),
+                        HeroMeta(label: context.tr('profile.heroHelped'), value: '$helpedCount', icon: Icons.favorite_rounded),
                       ],
                     ),
                   ),

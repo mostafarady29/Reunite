@@ -209,10 +209,11 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
     const notifications = recent.items.map((item, idx) => ({
       id: `notif-${item.report_id || idx + 1}`,
       type: item.kind === 'Found' ? 'caseUpdate' : 'emergency',
-      titleKey: item.kind === 'Found' ? 'notifications.caseResolved' : 'notifications.newReport',
-      bodyKey: item.name,
+      titleKey: item.kind === 'Found' ? 'notif.updateTitle' : 'notif.nearbyTitle',
+      bodyKey: item.kind === 'Found' ? 'notif.updateBody' : 'notif.nearbyBody',
       createdAt: item.created_at || new Date().toISOString(),
       caseId: String(item.report_id),
+      namedArgs: { place: item.name || 'القاهرة' },
       read: false,
     }));
     return reply.send({ success: true, data: notifications });
