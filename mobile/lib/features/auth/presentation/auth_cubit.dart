@@ -26,7 +26,10 @@ class AuthCubit extends Cubit<AuthState> {
     return AuthResult.success;
   }
 
-  String _mapFailure(AppFailure failure) => failure.messageKey;
+  String _mapFailure(AppFailure failure) =>
+      failure.details != null && failure.details!.isNotEmpty
+          ? failure.details!
+          : failure.messageKey;
 
   Future<AuthResult> login({
     required String identifier,

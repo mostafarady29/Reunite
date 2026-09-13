@@ -245,4 +245,93 @@ describe('Unified Backend Connectivity & API Integration Tests', () => {
     expect(body.data.activeCases).toBeGreaterThan(0);
     expect(body.data.reportsToday).toBeGreaterThan(0);
   });
+
+  // 4. Flutter Mobile Direct Endpoint Tests
+  it('POST /auth/login authenticates with identifier and password', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/auth/login',
+      payload: {
+        identifier: testPhone,
+        password: 'SecurePassword123!',
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.success).toBe(true);
+    expect(body.data.token).toBeDefined();
+    expect(body.data.user.id).toBeDefined();
+    expect(body.data.user.fullName).toBeDefined();
+  });
+
+  it('POST /auth/register registers with mobile payload (city name string)', async () => {
+    const mobilePhone = `+2011${Math.floor(10000000 + Math.random() * 90000000)}`;
+    const res = await app.inject({
+      method: 'POST',
+      url: '/auth/register',
+      payload: {
+        fullName: 'Flutter User',
+        phone: mobilePhone,
+        password: 'SecurePassword123!',
+        city: 'Nasr City',
+      },
+    });
+
+    expect(res.statusCode).toBe(201);
+    const body = res.json();
+    expect(body.success).toBe(true);
+    expect(body.data.user.fullName).toBe('Flutter User');
+    expect(body.data.user.id).toBeDefined();
+  });
+
+  it('POST /auth/verify-otp returns success', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/auth/verify-otp',
+      payload: { code: '123456' },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.success).toBe(true);
+  });
+
+  it('GET /notifications returns list of alerts for Flutter mobile', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/notifications',
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.success).toBe(true);
+    expect(Array.isArray(body.data)).toBe(true);
+  });
+
+  it('POST /notifications/read-all marks notifications as read', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/notifications/read-all',
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.success).toBe(true);
+  });
+
+  it('GET /me/reports retrieves user reports without /api prefix', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/me/reports',
+      headers: {
+        authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.success).toBe(true);
+    expect(Array.isArray(body.data)).toBe(true);
+  });
 });

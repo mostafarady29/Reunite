@@ -4,8 +4,8 @@ import { reportRepository } from '../repositories/report.repository.js';
 import { ValidationError } from '../core/errors/app-error.js';
 
 export const searchRoutes: FastifyPluginAsync = async (fastify) => {
-  // POST /api/search/photo (Visual face similarity search with agent memory)
-  fastify.post('/api/search/photo', async (request, reply) => {
+  // 1. POST search/photo (Visual face similarity search with agent memory)
+  const searchPhotoHandler = async (request: any, reply: any) => {
     const file = await request.file();
     if (!file) {
       throw new ValidationError('An image file is required.');
@@ -43,29 +43,30 @@ export const searchRoutes: FastifyPluginAsync = async (fastify) => {
       success: true,
       data: results,
     });
-  });
+  };
+  fastify.post('/api/search/photo', searchPhotoHandler);
+  fastify.post('/search/photo', searchPhotoHandler);
 
-  // GET /api/search/reports (Full-text query search for open reports)
-  fastify.get<{ Querystring: { search?: string; kind?: string } }>(
-    '/api/search/reports',
-    async (request, reply) => {
-      const search = request.query.search || '';
-      const kind = request.query.kind || null;
+  // 2. GET search/reports (Full-text query search for open reports)
+  const searchReportsHandler = async (request: any, reply: any) => {
+    const search = request.query.search || '';
+    const kind = request.query.kind || null;
 
-      const data = await reportRepository.findPaginated({
-        search,
-        kind,
-        status: 'Open',
-        page: 1,
-        limit: 50,
-      });
+    const data = await reportRepository.findPaginated({
+      search,
+      kind,
+      status: 'Open',
+      page: 1,
+      limit: 50,
+    });
 
-      return reply.send(data);
-    }
-  );
+    return reply.send(data);
+  };
+  fastify.get('/api/search/reports', searchReportsHandler);
+  fastify.get('/search/reports', searchReportsHandler);
 
-  // POST /api/embeddings (Generate raw embedding vector)
-  fastify.post('/api/embeddings', async (request, reply) => {
+  // 3. POST embeddings (Generate raw embedding vector)
+  const embeddingsHandler = async (request: any, reply: any) => {
     const file = await request.file();
     if (!file) {
       throw new ValidationError('An image file is required.');
@@ -81,10 +82,12 @@ export const searchRoutes: FastifyPluginAsync = async (fastify) => {
         embedding,
       },
     });
-  });
+  };
+  fastify.post('/api/embeddings', embeddingsHandler);
+  fastify.post('/embeddings', embeddingsHandler);
 
-  // POST /api/embeddings/store (Store embedding directly)
-  fastify.post('/api/embeddings/store', async (request, reply) => {
+  // 4. POST embeddings/store (Store embedding directly)
+  const embeddingsStoreHandler = async (request: any, reply: any) => {
     const parts = request.parts();
     let recordId: string | undefined;
     let imageBuffer: Buffer | undefined;
@@ -114,10 +117,12 @@ export const searchRoutes: FastifyPluginAsync = async (fastify) => {
         stored: true,
       },
     });
-  });
+  };
+  fastify.post('/api/embeddings/store', embeddingsStoreHandler);
+  fastify.post('/embeddings/store', embeddingsStoreHandler);
 
-  // POST /api/embeddings/search (Vector similarity search endpoint)
-  fastify.post('/api/embeddings/search', async (request, reply) => {
+  // 5. POST embeddings/search (Vector similarity search endpoint)
+  const embeddingsSearchHandler = async (request: any, reply: any) => {
     const parts = request.parts();
     let imageBuffer: Buffer | undefined;
     let filename = 'image.jpg';
@@ -149,5 +154,7 @@ export const searchRoutes: FastifyPluginAsync = async (fastify) => {
       success: true,
       data: { matches },
     });
-  });
+  };
+  fastify.post('/api/embeddings/search', embeddingsSearchHandler);
+  fastify.post('/embeddings/search', embeddingsSearchHandler);
 };

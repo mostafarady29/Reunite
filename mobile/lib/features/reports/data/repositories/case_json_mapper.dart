@@ -107,9 +107,20 @@ Map<String, dynamic> normalizeCaseJson(Map<String, dynamic> json) {
   String str(List<String> keys, [String fallback = '']) =>
       (pick<dynamic>(keys, fallback) ?? fallback).toString();
 
+  dynamic extractPhotoPath() {
+    if (json['photoPath'] != null) return json['photoPath'];
+    if (json['photo'] != null) return json['photo'];
+    if (json['imageUrl'] != null) return json['imageUrl'];
+    if (json['photos'] is List && (json['photos'] as List).isNotEmpty) {
+      final first = (json['photos'] as List)[0];
+      if (first is Map) return first['url'] ?? first['path'];
+    }
+    return null;
+  }
+
   return {
-    'id': str(['id', '_id']),
-    'type': str(['type'], 'missing'),
+    'id': str(['id', '_id', 'report_id']),
+    'type': str(['type', 'kind'], 'missing').toLowerCase(),
     'name': str(['name', 'childName'], 'Unknown'),
     'age': pick<num>(['age', 'estimatedAge'], 0).toInt(),
     'gender': str(['gender'], 'male'),
@@ -119,13 +130,13 @@ Map<String, dynamic> normalizeCaseJson(Map<String, dynamic> json) {
     'city': str(['city']),
     'area': str(['area', 'district']),
     'missingSince':
-        str(['missingSince', 'missingAt', 'createdAt'], DateTime.now().toIso8601String()),
-    'lastSeen': str(['lastSeen', 'lastSeenAt', 'updatedAt', 'missingSince'],
+        str(['missingSince', 'missingAt', 'occurrence_date', 'createdAt'], DateTime.now().toIso8601String()),
+    'lastSeen': str(['lastSeen', 'lastSeenAt', 'occurrence_date', 'updatedAt', 'missingSince'],
         DateTime.now().toIso8601String()),
     'clothing': str(['clothing']),
     'description': str(['description', 'details']),
     'distinguishingMarks': json['distinguishingMarks'] ?? json['marks'],
-    'photoPath': json['photoPath'] ?? json['photo'] ?? json['imageUrl'],
+    'photoPath': extractPhotoPath(),
     'verified': json['verified'] ?? json['isVerified'] ?? false,
     'coordinates': coords ?? json['coordinates'],
   };

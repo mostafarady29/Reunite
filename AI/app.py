@@ -76,4 +76,4 @@ def embed(image):
     return vector.tolist()
 
 demo = gr.Interface(fn=embed, inputs=gr.Image(type="pil"), outputs=gr.JSON(), api_name="embed")
-demo.launch()
+demo.launch(server_name=os.getenv("HOST", "0.0.0.0"), server_port=int(os.getenv("PORT", "7860")))

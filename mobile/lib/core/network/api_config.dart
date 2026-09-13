@@ -5,7 +5,7 @@
 /// ```
 /// flutter run --dart-define=USE_MOCK=false --dart-define=API_BASE_URL=https://api.myserver.com/v1
 /// ```
-const bool kUseMock = bool.fromEnvironment('USE_MOCK', defaultValue: true);
+const bool kUseMock = bool.fromEnvironment('USE_MOCK', defaultValue: false);
 
 /// Overrides [AppConstants.apiBaseUrl] when provided via --dart-define.
 /// Empty means "use the compiled-in default".

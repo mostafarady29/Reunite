@@ -29,7 +29,7 @@ class AppDropdown<T> extends StatelessWidget {
       borderSide: BorderSide(color: context.colorScheme.outline),
     );
     return DropdownButtonFormField<T>(
-      initialValue: value,
+      value: value,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: label,

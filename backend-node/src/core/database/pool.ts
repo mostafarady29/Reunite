@@ -15,15 +15,15 @@ function createPool(): pg.Pool {
     });
   }
 
-  const connStr = getDatabaseConnectionString();
+  const rawConnStr = getDatabaseConnectionString();
+  const requiresSsl = rawConnStr.includes('sslmode=require') || rawConnStr.includes('supabase.com');
+  const connStr = rawConnStr.replace(/[?&]sslmode=[^&]+/, '');
   return new Pool({
     connectionString: connStr,
     max: env.DB_POOL_MAX,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000,
-    ssl: connStr.includes('sslmode=require')
-      ? { rejectUnauthorized: false }
-      : undefined,
+    ssl: requiresSsl ? { rejectUnauthorized: false } : undefined,
   });
 }
 

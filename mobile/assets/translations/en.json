@@ -414,5 +414,14 @@
     "matchBody": "We found a possible match for your case",
     "successTitle": "Reunited successfully 💚",
     "successBody": "A child has been reunited with family"
+  },
+  "error": {
+    "server": "Server error. Please try again.",
+    "network": "Network connection error. Please check your internet.",
+    "timeout": "Connection timed out. Please try again.",
+    "unauthorized": "Session expired or unauthorized.",
+    "notFound": "Resource not found.",
+    "validation": "Please check your inputs and try again.",
+    "conflict": "This account or information already exists."
   }
 }

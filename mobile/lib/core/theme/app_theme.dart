@@ -4,10 +4,7 @@ export 'theme_color_scheme.dart';
 export 'theme_components.dart';
 export 'theme_extras.dart';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import 'app_dimens.dart';
 import 'app_palette.dart';
 import 'app_typography.dart';
 import 'theme_color_scheme.dart';

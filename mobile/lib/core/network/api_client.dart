@@ -17,8 +17,17 @@ class ApiClient {
   /// Raw Dio for repositories. Prefer [run] so errors map to [AppFailure].
   Dio get dio => _dio;
 
-  static String get effectiveBaseUrl =>
-      kApiBaseUrlOverride.isNotEmpty ? kApiBaseUrlOverride : AppConstants.apiBaseUrl;
+  static String get effectiveBaseUrl {
+    if (kApiBaseUrlOverride.isNotEmpty) return kApiBaseUrlOverride;
+    if (kDebugMode) {
+      if (kIsWeb) return 'http://localhost:8000';
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        return 'http://10.0.2.2:8000';
+      }
+      return 'http://localhost:8000';
+    }
+    return AppConstants.apiBaseUrl;
+  }
 
   static ApiClient instance = ApiClient._(Dio(
     BaseOptions(
@@ -58,13 +67,22 @@ class ApiClient {
         if (status == 404) return const NotFoundFailure();
         if (status != null && status >= 400 && status < 500) {
           final data = e.response?.data;
-          if (data is Map<String, dynamic> && data['errors'] is Map) {
-            final errors = data['errors'] as Map<String, dynamic>;
-            final fieldMessages = errors.map((k, v) => MapEntry(k, v.toString()));
-            return ValidationFailure(fieldMessages: fieldMessages);
-          }
-          if (data is Map<String, dynamic> && data['message'] is String) {
-            return ServerFailure(details: data['message'] as String);
+          if (data is Map<String, dynamic>) {
+            if (data['errors'] is Map) {
+              final errors = data['errors'] as Map<String, dynamic>;
+              final fieldMessages = errors.map((k, v) => MapEntry(k, v.toString()));
+              return ValidationFailure(fieldMessages: fieldMessages);
+            }
+            final msg = (data['message'] is String)
+                ? data['message'] as String
+                : (data['error'] is Map && data['error']['message'] is String)
+                    ? data['error']['message'] as String
+                    : (data['error'] is String)
+                        ? data['error'] as String
+                        : null;
+            if (msg != null) {
+              return ServerFailure(details: msg);
+            }
           }
         }
         return const ServerFailure();

@@ -83,6 +83,11 @@ export class ReportRepository {
       report.photos = [];
     }
 
+    (report as any).id = report.report_id;
+    if (report.photos && report.photos.length > 0) {
+      (report as any).photoPath = report.photos[0].url || report.photos[0].path;
+    }
+
     return report;
   }
 

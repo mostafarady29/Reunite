@@ -1,0 +1,17 @@
+{
+  "name": "reunite-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reunite - Unified missing persons network (Backend, Web Frontend, Flutter Mobile, AI, Database)",
+  "scripts": {
+    "dev:backend": "npm --prefix backend-node run dev",
+    "dev:frontend": "npm --prefix Frontend run dev",
+    "build:backend": "npm --prefix backend-node run build",
+    "build:frontend": "npm --prefix Frontend run build",
+    "test": "npm --prefix backend-node test",
+    "test:backend": "npm --prefix backend-node test",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  }
+}

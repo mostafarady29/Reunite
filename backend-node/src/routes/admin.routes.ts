@@ -20,14 +20,16 @@ import {
 export const adminRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.addHook('preHandler', requireAdmin);
 
-  // GET /api/admin/users
-  fastify.get('/api/admin/users', async (_request, reply) => {
+  // 1. GET admin users
+  const getAdminUsersHandler = async (_request: any, reply: any) => {
     const users = await userRepository.findAllWithStats();
     return reply.send({ success: true, data: users });
-  });
+  };
+  fastify.get('/api/admin/users', getAdminUsersHandler);
+  fastify.get('/admin/users', getAdminUsersHandler);
 
-  // POST /api/admin/users
-  fastify.post('/api/admin/users', async (request, reply) => {
+  // 2. POST admin users
+  const createAdminUserHandler = async (request: any, reply: any) => {
     const body = validateSchema(adminCreateUserSchema, request.body);
 
     const cityExists = await locationRepository.cityExists(body.city_id);
@@ -50,10 +52,12 @@ export const adminRoutes: FastifyPluginAsync = async (fastify) => {
     });
 
     return reply.status(201).send({ success: true, data: user });
-  });
+  };
+  fastify.post('/api/admin/users', createAdminUserHandler);
+  fastify.post('/admin/users', createAdminUserHandler);
 
-  // PATCH /api/admin/users/:id
-  fastify.patch<{ Params: { id: string } }>('/api/admin/users/:id', async (request, reply) => {
+  // 3. PATCH admin users
+  const updateAdminUserHandler = async (request: any, reply: any) => {
     const targetUserId = parseInt(request.params.id, 10);
     const currentAdminId = request.currentUser!.user_id;
 
@@ -95,10 +99,12 @@ export const adminRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     return reply.send({ success: true, data: updated });
-  });
+  };
+  fastify.patch('/api/admin/users/:id', updateAdminUserHandler);
+  fastify.patch('/admin/users/:id', updateAdminUserHandler);
 
-  // DELETE /api/admin/users/:id
-  fastify.delete<{ Params: { id: string } }>('/api/admin/users/:id', async (request, reply) => {
+  // 4. DELETE admin users
+  const deleteAdminUserHandler = async (request: any, reply: any) => {
     const targetUserId = parseInt(request.params.id, 10);
     const currentAdminId = request.currentUser!.user_id;
 
@@ -111,17 +117,15 @@ export const adminRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError('User not found.');
     }
 
-    // Retrieve storage paths for photos owned by this user
     const photoPaths = await photoRepository.findPathsByUserId(targetUserId);
-
-    // Delete user (database CASCADE will delete comments, embeddings, photos, reports)
     await userRepository.deleteUser(targetUserId);
 
-    // Clean up photo objects in storage
     for (const path of photoPaths) {
       storageService.deleteObject(path).catch(console.error);
     }
 
     return reply.send({ success: true, data: { deleted: true } });
-  });
+  };
+  fastify.delete('/api/admin/users/:id', deleteAdminUserHandler);
+  fastify.delete('/admin/users/:id', deleteAdminUserHandler);
 };

@@ -62,7 +62,7 @@ class User {
       };
 
   factory User.fromJson(Map<String, dynamic> json) => User(
-        id: (json['id'] ?? json['_id'] ?? '').toString(),
+        id: (json['id'] ?? json['_id'] ?? json['user_id'] ?? '').toString(),
         fullName: (json['fullName'] ?? json['name'] ?? '') as String,
         email: json['email'] as String?,
         phone: json['phone'] as String?,
@@ -72,6 +72,6 @@ class User {
                 json['verified'] ??
                 json['isVerified'] ??
                 false) as bool,
-        city: (json['city'] ?? json['governorate']) as String?,
+        city: (json['city'] ?? json['cityName'] ?? json['governorate']) as String?,
       );
 }

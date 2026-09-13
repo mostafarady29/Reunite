@@ -43,9 +43,12 @@ export async function buildApp(): Promise<FastifyInstance> {
   const allowedOrigins = env.FRONTEND_URL.split(',').map((url) => url.trim());
   await app.register(cors, {
     origin: (origin, cb) => {
-      // Allow requests with no origin (like mobile apps or curl)
       if (!origin) return cb(null, true);
-      if (allowedOrigins.includes(origin) || env.NODE_ENV !== 'production') {
+      if (
+        allowedOrigins.includes(origin) ||
+        env.NODE_ENV !== 'production' ||
+        /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+      ) {
         return cb(null, true);
       }
       return cb(new Error('Not allowed by CORS'), false);

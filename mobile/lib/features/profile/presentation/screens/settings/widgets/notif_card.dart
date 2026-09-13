@@ -52,7 +52,7 @@ class ToggleTile extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: context.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700, fontSize: 13.5)), Text(subtitle, style: context.textTheme.bodySmall?.copyWith(color: context.palette.textSecondary, fontSize: 11.5))])),
           const SizedBox(width: 10),
-          Switch(value: value, onChanged: onChanged, activeThumbColor: AppColors.primary),
+          Switch(value: value, onChanged: onChanged, activeColor: AppColors.primary),
         ],
       ),
     );

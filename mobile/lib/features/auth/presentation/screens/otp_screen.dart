@@ -3,9 +3,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/di/app_di.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_dimens.dart';
 import '../../../../core/widgets/widgets.dart';
+import '../../data/auth_repository.dart';
 import '../auth_cubit.dart';
 import 'otp/otp_controller.dart';
 import 'otp/widgets/otp_code_input.dart';
@@ -13,14 +15,26 @@ import 'otp/widgets/otp_footer.dart';
 import 'otp/widgets/otp_header.dart';
 
 @RoutePage()
-class OtpScreen extends StatefulWidget {
+class OtpScreen extends StatelessWidget {
   const OtpScreen({super.key});
 
   @override
-  State<OtpScreen> createState() => _OtpScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => AuthCubit(getIt<AuthRepository>()),
+      child: const _OtpView(),
+    );
+  }
 }
 
-class _OtpScreenState extends State<OtpScreen> {
+class _OtpView extends StatefulWidget {
+  const _OtpView();
+
+  @override
+  State<_OtpView> createState() => _OtpViewState();
+}
+
+class _OtpViewState extends State<_OtpView> {
   late final OtpController _otp = OtpController();
 
   @override

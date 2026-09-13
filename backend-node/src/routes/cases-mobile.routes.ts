@@ -5,18 +5,7 @@ import { commentRepository } from '../repositories/comment.repository.js';
 import { userRepository } from '../repositories/user.repository.js';
 import { agentMemoryService } from '../services/agent-memory.service.js';
 import { authenticate, optionalAuth } from '../middlewares/auth.middleware.js';
-import { hashPassword, generateToken, setAuthCookie } from '../core/security/auth.js';
-import {
-  authSignupSchema,
-  updateMeSchema,
-  validateSchema,
-} from '../validators/schemas.js';
-import {
-  NotFoundError,
-  ValidationError,
-  ConflictError,
-  UnauthorizedError,
-} from '../core/errors/app-error.js';
+import { NotFoundError, ValidationError } from '../core/errors/app-error.js';
 
 export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
   // 1. GET /cases/missing
@@ -200,76 +189,40 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send({ success: true, data: list });
   });
 
-  // 11. POST /auth/register (Mobile alias for signup)
-  fastify.post('/auth/register', async (request, reply) => {
-    const body = validateSchema(authSignupSchema, request.body);
 
-    const existingUser = await userRepository.findByPhone(body.phone);
-    if (existingUser) {
-      throw new ConflictError('Phone number is already registered.');
-    }
-
-    const cityValid = await locationRepository.validateCityBelongsToGovernorate(
-      body.city_id,
-      body.governorate_id
-    );
-    if (!cityValid) {
-      throw new ValidationError('City does not belong to the selected governorate.');
-    }
-
-    const passwordHash = await hashPassword(body.password);
-    const user = await userRepository.create({
-      name: body.name,
-      phone: body.phone,
-      password_hash: passwordHash,
-      city_id: body.city_id,
-      role: false,
-    });
-
-    const token = generateToken(user);
-    setAuthCookie(reply, token);
-
-    return reply.status(201).send({
-      success: true,
-      data: {
-        user,
-        token,
-      },
-    });
-  });
-
-  // 12. GET /auth/me (Mobile alias for /me)
-  fastify.get('/auth/me', { preHandler: [authenticate] }, async (request, reply) => {
-    return reply.send({
-      success: true,
-      data: request.currentUser,
-    });
-  });
-
-  // 13. PATCH /auth/profile (Mobile alias for updating profile)
-  fastify.patch('/auth/profile', { preHandler: [authenticate] }, async (request, reply) => {
-    const body = validateSchema(updateMeSchema, request.body);
-    const updated = await userRepository.updateProfile(request.currentUser!.user_id, body);
-    if (!updated) {
-      throw new ValidationError('Nothing to update.');
-    }
-
-    return reply.send({
-      success: true,
-      data: updated,
-    });
-  });
-
-  // 14. GET /me/findings (User's reported found cases)
+  // 20. GET /me/findings (User's reported found cases)
   fastify.get('/me/findings', { preHandler: [authenticate] }, async (request, reply) => {
     const all = await reportRepository.findByUserId(request.currentUser!.user_id);
     const findings = all.filter((r) => r.kind === 'Found');
     return reply.send({ success: true, data: findings });
   });
 
-  // 15. GET /me/sightings (Sightings reported by user)
+  // 21. GET /me/sightings (Sightings reported by user)
   fastify.get('/me/sightings', { preHandler: [authenticate] }, async (request, reply) => {
     const all = await reportRepository.findByUserId(request.currentUser!.user_id);
     return reply.send({ success: true, data: all });
+  });
+
+  // 22. GET /notifications (Mobile notifications feed)
+  fastify.get('/notifications', async (_request, reply) => {
+    const recent = await reportRepository.findPaginated({ page: 1, limit: 10 });
+    const notifications = recent.items.map((item, idx) => ({
+      id: `notif-${item.report_id || idx + 1}`,
+      type: item.kind === 'Found' ? 'caseUpdate' : 'emergency',
+      titleKey: item.kind === 'Found' ? 'notifications.caseResolved' : 'notifications.newReport',
+      bodyKey: item.name,
+      createdAt: item.created_at || new Date().toISOString(),
+      caseId: String(item.report_id),
+      read: false,
+    }));
+    return reply.send({ success: true, data: notifications });
+  });
+
+  // 23. POST /notifications/read-all (Mark notifications read)
+  fastify.post('/notifications/read-all', async (_request, reply) => {
+    return reply.send({
+      success: true,
+      data: { message: 'All notifications marked as read.' },
+    });
   });
 };
