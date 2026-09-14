@@ -3,6 +3,15 @@ import { checkDatabaseHealth } from '../core/database/pool.js';
 import { env } from '../config/env.js';
 
 export const healthRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get('/', async (_request, reply) => {
+    return reply.send({
+      success: true,
+      message: 'Reunite Node.js API is running',
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   fastify.get('/api/health', async (_request, reply) => {
     return reply.send({
       success: true,
