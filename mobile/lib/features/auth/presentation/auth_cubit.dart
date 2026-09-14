@@ -17,11 +17,19 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<AuthResult> _persist(User user) async {
     final store = getIt<AuthStore>();
-    store.saveSession(
-      token: 'demo-token-${DateTime.now().millisecondsSinceEpoch}',
-      userId: user.id,
-      refreshToken: 'demo-refresh',
-    );
+    if (store.token == null || store.token!.isEmpty) {
+      store.saveSession(
+        token: 'demo-token-${DateTime.now().millisecondsSinceEpoch}',
+        userId: user.id,
+        refreshToken: 'demo-refresh',
+      );
+    } else {
+      store.saveSession(
+        token: store.token!,
+        userId: user.id,
+        refreshToken: store.refreshToken,
+      );
+    }
     emit(AuthSuccess(user));
     return AuthResult.success;
   }

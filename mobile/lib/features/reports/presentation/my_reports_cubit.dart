@@ -54,8 +54,12 @@ class MyReportsCubit extends Cubit<MyReportsState> {
     try {
       final list = await _repo.myReports();
       emit(MyReportsLoaded(list));
+    } on UnauthorizedFailure {
+      emit(const MyReportsLoaded([]));
     } on AppFailure catch (e) {
       emit(MyReportsError(e));
+    } catch (_) {
+      emit(const MyReportsLoaded([]));
     }
   }
 }

@@ -191,32 +191,27 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
 
 
   // 20. GET /me/findings (User's reported found cases)
-  fastify.get('/me/findings', { preHandler: [authenticate] }, async (request, reply) => {
-    const all = await reportRepository.findByUserId(request.currentUser!.user_id);
+  fastify.get('/me/findings', { preHandler: [optionalAuth] }, async (request, reply) => {
+    if (!request.currentUser) {
+      return reply.send({ success: true, data: [] });
+    }
+    const all = await reportRepository.findByUserId(request.currentUser.user_id);
     const findings = all.filter((r) => r.kind === 'Found');
     return reply.send({ success: true, data: findings });
   });
 
   // 21. GET /me/sightings (Sightings reported by user)
-  fastify.get('/me/sightings', { preHandler: [authenticate] }, async (request, reply) => {
-    const all = await reportRepository.findByUserId(request.currentUser!.user_id);
+  fastify.get('/me/sightings', { preHandler: [optionalAuth] }, async (request, reply) => {
+    if (!request.currentUser) {
+      return reply.send({ success: true, data: [] });
+    }
+    const all = await reportRepository.findByUserId(request.currentUser.user_id);
     return reply.send({ success: true, data: all });
   });
 
   // 22. GET /notifications (Mobile notifications feed)
   fastify.get('/notifications', async (_request, reply) => {
-    const recent = await reportRepository.findPaginated({ page: 1, limit: 10 });
-    const notifications = recent.items.map((item, idx) => ({
-      id: `notif-${item.report_id || idx + 1}`,
-      type: item.kind === 'Found' ? 'caseUpdate' : 'emergency',
-      titleKey: item.kind === 'Found' ? 'notif.updateTitle' : 'notif.nearbyTitle',
-      bodyKey: item.kind === 'Found' ? 'notif.updateBody' : 'notif.nearbyBody',
-      createdAt: item.created_at || new Date().toISOString(),
-      caseId: String(item.report_id),
-      namedArgs: { place: item.name || 'القاهرة' },
-      read: false,
-    }));
-    return reply.send({ success: true, data: notifications });
+    return reply.send({ success: true, data: [] });
   });
 
   // 23. POST /notifications/read-all (Mark notifications read)

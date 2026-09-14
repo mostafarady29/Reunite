@@ -15,7 +15,7 @@ import {
   setAuthCookie,
   clearAuthCookie,
 } from '../core/security/auth.js';
-import { authenticate } from '../middlewares/auth.middleware.js';
+import { authenticate, optionalAuth } from '../middlewares/auth.middleware.js';
 import {
   ConflictError,
   ValidationError,
@@ -205,15 +205,21 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   // Me & Profile
   const meHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    if (!request.currentUser) {
+      return reply.send({
+        success: true,
+        data: null,
+      });
+    }
     return reply.send({
       success: true,
       data: formatUserResponse(request.currentUser),
     });
   };
-  fastify.get('/api/me', { preHandler: [authenticate] }, meHandler);
-  fastify.get('/me', { preHandler: [authenticate] }, meHandler);
-  fastify.get('/auth/me', { preHandler: [authenticate] }, meHandler);
-  fastify.get('/api/auth/me', { preHandler: [authenticate] }, meHandler);
+  fastify.get('/api/me', { preHandler: [optionalAuth] }, meHandler);
+  fastify.get('/me', { preHandler: [optionalAuth] }, meHandler);
+  fastify.get('/auth/me', { preHandler: [optionalAuth] }, meHandler);
+  fastify.get('/api/auth/me', { preHandler: [optionalAuth] }, meHandler);
 
   const profileUpdateHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     const body = validateSchema(updateMeSchema, request.body);
@@ -258,12 +264,18 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch('/me/password', { preHandler: [authenticate] }, passwordChangeHandler);
 
   const reportsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
-    const reports = await reportRepository.findByUserId(request.currentUser!.user_id);
+    if (!request.currentUser) {
+      return reply.send({
+        success: true,
+        data: [],
+      });
+    }
+    const reports = await reportRepository.findByUserId(request.currentUser.user_id);
     return reply.send({
       success: true,
       data: reports,
     });
   };
-  fastify.get('/api/me/reports', { preHandler: [authenticate] }, reportsHandler);
-  fastify.get('/me/reports', { preHandler: [authenticate] }, reportsHandler);
+  fastify.get('/api/me/reports', { preHandler: [optionalAuth] }, reportsHandler);
+  fastify.get('/me/reports', { preHandler: [optionalAuth] }, reportsHandler);
 };
