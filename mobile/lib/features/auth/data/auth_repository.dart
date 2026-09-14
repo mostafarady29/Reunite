@@ -18,12 +18,12 @@ class RegisterInput {
 
 class LoginInput {
   const LoginInput({
-    required this.identifier,
+    required this.phone,
     required this.password,
     required this.rememberMe,
   });
 
-  final String identifier;
+  final String phone;
   final String password;
   final bool rememberMe;
 }

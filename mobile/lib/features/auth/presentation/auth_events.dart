@@ -9,34 +9,32 @@ sealed class AuthEvent extends Equatable {
 
 class LoginRequested extends AuthEvent {
   const LoginRequested({
-    required this.identifier,
+    required this.phone,
     required this.password,
     required this.rememberMe,
   });
-  final String identifier;
+  final String phone;
   final String password;
   final bool rememberMe;
 
   @override
-  List<Object?> get props => [identifier, password, rememberMe];
+  List<Object?> get props => [phone, password, rememberMe];
 }
 
 class RegisterRequested extends AuthEvent {
   const RegisterRequested({
     required this.fullName,
-    required this.email,
     required this.phone,
     required this.password,
     this.city,
   });
   final String fullName;
-  final String email;
   final String phone;
   final String password;
   final String? city;
 
   @override
-  List<Object?> get props => [fullName, email, phone, password, city];
+  List<Object?> get props => [fullName, phone, password, city];
 }
 
 class OtpSubmitted extends AuthEvent {

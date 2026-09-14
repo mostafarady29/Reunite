@@ -19,7 +19,6 @@ class RegisterFormController extends ChangeNotifier {
 
   final formKey = GlobalKey<FormState>();
   final name = TextEditingController();
-  final email = TextEditingController();
   final phone = TextEditingController();
   final password = TextEditingController();
   final confirm = TextEditingController();
@@ -107,7 +106,7 @@ class RegisterFormController extends ChangeNotifier {
 
   @override
   void dispose() {
-    for (final c in [name, email, phone, password, confirm]) {
+    for (final c in [name, phone, password, confirm]) {
       c.dispose();
     }
     super.dispose();

@@ -6,6 +6,7 @@ export 'app_search_bar.dart';
 export 'app_bar.dart';
 export 'app_bottom_sheet.dart';
 export 'app_dialog.dart';
+export 'auth_error_dialog.dart';
 export 'app_snackbar.dart';
 export 'app_chip.dart';
 export 'avatar.dart';

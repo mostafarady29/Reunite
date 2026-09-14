@@ -7,7 +7,7 @@ class AppConstants {
   static const String packageName = 'com.reunitee.app';
 
   /// Base URL for the future REST backend.
-  static const String apiBaseUrl = 'https://api.reunitee.app/v1';
+  static const String apiBaseUrl = 'https://backend-node-three-omega.vercel.app/api';
 
   static const int connectTimeoutMs = 15000;
   static const int receiveTimeoutMs = 20000;

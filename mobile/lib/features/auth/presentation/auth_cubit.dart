@@ -34,26 +34,29 @@ class AuthCubit extends Cubit<AuthState> {
     return AuthResult.success;
   }
 
-  String _mapFailure(AppFailure failure) =>
-      failure.details != null && failure.details!.isNotEmpty
-          ? failure.details!
-          : failure.messageKey;
+  AuthError _mapFailure(AppFailure failure) => AuthError(
+        failure.messageKey,
+        details: failure.details,
+        fieldMessages: failure is ValidationFailure
+            ? failure.fieldMessages
+            : const {},
+      );
 
   Future<AuthResult> login({
-    required String identifier,
+    required String phone,
     required String password,
     required bool rememberMe,
   }) async {
     emit(const AuthLoading());
     try {
       final user = await _repo.login(LoginInput(
-        identifier: identifier,
+        phone: phone,
         password: password,
         rememberMe: rememberMe,
       ));
       return await _persist(user);
     } on AppFailure catch (e) {
-      emit(AuthError(_mapFailure(e)));
+      emit(_mapFailure(e));
       return AuthResult.failure;
     }
   }
@@ -74,7 +77,7 @@ class AuthCubit extends Cubit<AuthState> {
       ));
       return await _persist(user);
     } on AppFailure catch (e) {
-      emit(AuthError(_mapFailure(e)));
+      emit(_mapFailure(e));
       return AuthResult.failure;
     }
   }
@@ -86,7 +89,7 @@ class AuthCubit extends Cubit<AuthState> {
       emit(const AuthSuccess(User(id: 'pending')));
       return AuthResult.success;
     } on AppFailure catch (e) {
-      emit(AuthError(_mapFailure(e)));
+      emit(_mapFailure(e));
       return AuthResult.failure;
     }
   }
@@ -98,7 +101,7 @@ class AuthCubit extends Cubit<AuthState> {
       emit(const AuthInitial());
       return AuthResult.success;
     } on AppFailure catch (e) {
-      emit(AuthError(_mapFailure(e)));
+      emit(_mapFailure(e));
       return AuthResult.failure;
     }
   }
@@ -114,7 +117,7 @@ class AuthCubit extends Cubit<AuthState> {
       emit(const AuthSuccess(User(id: 'reset')));
       return AuthResult.success;
     } on AppFailure catch (e) {
-      emit(AuthError(_mapFailure(e)));
+      emit(_mapFailure(e));
       return AuthResult.failure;
     }
   }

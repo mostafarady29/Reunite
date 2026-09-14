@@ -26,9 +26,20 @@ class AuthSuccess extends AuthState {
 }
 
 class AuthError extends AuthState {
-  const AuthError(this.messageKey);
+  const AuthError(
+    this.messageKey, {
+    this.details,
+    this.fieldMessages = const {},
+  });
   final String messageKey;
 
+  /// Raw backend message / `HTTP <status> | <endpoint> | <message>`.
+  /// Shown in the error dialog so the exact failure is identifiable.
+  final String? details;
+
+  /// Per-field validation errors from the backend (`errors` map).
+  final Map<String, String> fieldMessages;
+
   @override
-  List<Object?> get props => [messageKey];
+  List<Object?> get props => [messageKey, details, fieldMessages];
 }

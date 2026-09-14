@@ -1,8 +1,7 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:reunitee_app/core/widgets/app_snackbar.dart';
+import 'package:reunitee_app/core/widgets/widgets.dart';
 
 import '../../../../../core/di/app_di.dart';
 import '../../../../../core/locations/locations_repository.dart';
@@ -54,13 +53,12 @@ class RegisterViewState extends State<RegisterView> {
       backgroundColor: context.palette.background,
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
-          if (state is AuthError) {
-            showAppSnackbar(
-              context,
-              text: context.tr(state.messageKey),
-              type: SnackBarType.error,
-            );
-          }
+          handleAuthError(
+            context,
+            state,
+            operationLabel: 'register',
+            onRetry: state is AuthError ? () => _c.submit(context) : null,
+          );
         },
         builder: (context, state) {
           final loading = state is AuthLoading;

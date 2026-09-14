@@ -21,16 +21,20 @@ class LoginFormFields extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         LoginModernInput(
-          label: context.tr('auth.email'),
-          icon: Icons.mail_outline_rounded,
-          keyboardType: TextInputType.emailAddress,
+          label: context.tr('auth.phone'),
+          icon: Icons.phone_outlined,
+          keyboardType: TextInputType.phone,
           textInputAction: TextInputAction.next,
-          autofillHints: const [AutofillHints.email],
-          controller: controller.identifier,
+          autofillHints: const [AutofillHints.telephoneNumber],
+          controller: controller.phone,
           delay: 550,
           validator: (v) {
-            if (v == null || v.trim().isEmpty) {
+            final p = v?.trim() ?? '';
+            if (p.isEmpty) {
               return context.tr('validation.required');
+            }
+            if (!RegExp(r'^[0-9+\s]{8,}$').hasMatch(p)) {
+              return context.tr('validation.phone');
             }
             return null;
           },

@@ -9,7 +9,7 @@ import 'auth_repository.dart';
 /// doesn't change when [kUseMock] flips to false.
 ///
 /// Expected backend contract (JSON:API-ish):
-/// POST /auth/login    {identifier, password} -> {token, refreshToken, user}
+/// POST /auth/login    {phone, password} -> {token, refreshToken, user}
 /// POST /auth/register {fullName, phone, password, city} -> {token?, user}
 /// NOTE: governorate is UI-only — only `city` is sent to the backend.
 /// POST /auth/verify-otp {code}
@@ -27,7 +27,9 @@ class RemoteAuthRepository implements AuthRepository {
   Future<User> login(LoginInput input) async {
     final res = await _api.run(
       (dio) => dio.post(ApiEndpoints.login, data: {
-        'identifier': input.identifier,
+        'phone': input.phone,
+        // Kept for backward compatibility with backends expecting `identifier`.
+        'identifier': input.phone,
         'password': input.password,
       }),
     );

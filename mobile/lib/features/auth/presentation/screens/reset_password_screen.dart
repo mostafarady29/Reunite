@@ -71,10 +71,12 @@ class _ResetViewState extends State<_ResetView> {
         top: false,
         child: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
-            if (state is AuthError) {
-              showAppSnackbar(context,
-                  text: context.tr(state.messageKey), type: SnackBarType.error);
-            }
+            handleAuthError(
+              context,
+              state,
+              operationLabel: 'reset-password',
+              onRetry: state is AuthError ? _submit : null,
+            );
           },
           builder: (context, state) {
             final loading = state is AuthLoading;

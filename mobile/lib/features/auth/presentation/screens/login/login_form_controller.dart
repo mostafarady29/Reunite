@@ -9,7 +9,7 @@ class LoginFormController extends ChangeNotifier {
   LoginFormController();
 
   final formKey = GlobalKey<FormState>();
-  final identifier = TextEditingController();
+  final phone = TextEditingController();
   final password = TextEditingController();
   bool rememberMe = true;
 
@@ -22,7 +22,7 @@ class LoginFormController extends ChangeNotifier {
     if (!(formKey.currentState?.validate() ?? false)) return;
     final cubit = context.read<AuthCubit>();
     await cubit.login(
-      identifier: identifier.text.trim(),
+      phone: phone.text.trim(),
       password: password.text,
       rememberMe: rememberMe,
     );
@@ -42,7 +42,7 @@ class LoginFormController extends ChangeNotifier {
 
   @override
   void dispose() {
-    identifier.dispose();
+    phone.dispose();
     password.dispose();
     super.dispose();
   }

@@ -1,5 +1,4 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -52,13 +51,12 @@ class LoginViewState extends State<LoginView> {
       backgroundColor: context.palette.background,
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
-          if (state is AuthError) {
-            showAppSnackbar(
-              context,
-              text: context.tr(state.messageKey),
-              type: SnackBarType.error,
-            );
-          }
+          handleAuthError(
+            context,
+            state,
+            operationLabel: 'login',
+            onRetry: state is AuthError ? () => _c.submit(context) : null,
+          );
         },
         builder: (context, state) {
           final loading = state is AuthLoading;

@@ -34,21 +34,6 @@ class RegisterPersonalFields extends StatelessWidget {
               : null,
         ),
         RegisterModernInput(
-          label: context.tr('auth.email'),
-          icon: Icons.mail_outline_rounded,
-          keyboardType: TextInputType.emailAddress,
-          textInputAction: TextInputAction.next,
-          autofillHints: const [AutofillHints.email],
-          controller: controller.email,
-          delay: 590,
-          validator: (v) {
-            final e = v?.trim() ?? '';
-            final ok =
-                RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(e);
-            return ok ? null : context.tr('validation.email');
-          },
-        ),
-        RegisterModernInput(
           label: context.tr('auth.phone'),
           icon: Icons.phone_outlined,
           keyboardType: TextInputType.phone,
