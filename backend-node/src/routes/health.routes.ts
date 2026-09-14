@@ -3,14 +3,23 @@ import { checkDatabaseHealth } from '../core/database/pool.js';
 import { env } from '../config/env.js';
 
 export const healthRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get('/', async (_request, reply) => {
+  const sendRoot = async (_request: any, reply: any) => {
     return reply.send({
       success: true,
       message: 'Reunite Node.js API is running',
       version: '1.0.0',
       timestamp: new Date().toISOString(),
+      endpoints: {
+        health: '/api/health',
+        ready: '/api/ready',
+        cases: '/api/cases',
+      },
     });
-  });
+  };
+
+  fastify.get('/', sendRoot);
+  fastify.get('/api', sendRoot);
+  fastify.get('/api/index', sendRoot);
 
   fastify.get('/api/health', async (_request, reply) => {
     return reply.send({

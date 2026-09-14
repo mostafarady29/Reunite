@@ -9,6 +9,9 @@ export default async function handler(req: any, res: any) {
       app = await buildApp();
       await app.ready();
     }
+    if (req.url === '/api/index' || req.url === '/api/index/' || !req.url) {
+      req.url = '/';
+    }
     app.server.emit('request', req, res);
   } catch (err) {
     console.error('Vercel serverless function error:', err);
