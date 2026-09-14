@@ -24,7 +24,7 @@ export async function buildApp(): Promise<FastifyInstance> {
         : {
             level: env.NODE_ENV === 'production' ? 'info' : 'debug',
             transport:
-              env.NODE_ENV === 'development'
+              env.NODE_ENV === 'development' && !process.env.VERCEL
                 ? {
                     target: 'pino-pretty',
                     options: { colorize: true },
