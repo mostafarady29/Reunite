@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/utils/context_extensions.dart';
@@ -7,7 +9,7 @@ import '../../../../../../core/widgets/widgets.dart';
 import 'section_card.dart';
 import 'secondary_btn.dart';
 
-/// Photo capture step, extracted from `missing_view.dart`. No logic changes.
+/// Photo capture step with real ImagePicker support and live preview.
 class MissingPhotoStep extends StatelessWidget {
   const MissingPhotoStep({
     super.key,
@@ -17,8 +19,29 @@ class MissingPhotoStep extends StatelessWidget {
   final String? photoSeed;
   final ValueChanged<String?> onPhotoChanged;
 
+  Future<void> _pickPhoto(BuildContext context, ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final XFile? picked = await picker.pickImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 70,
+      );
+      if (picked != null) {
+        final bytes = await picked.readAsBytes();
+        final mime = picked.mimeType ?? 'image/jpeg';
+        final base64String = 'data:$mime;base64,${base64Encode(bytes)}';
+        onPhotoChanged(base64String);
+      }
+    } catch (e) {
+      debugPrint('Error picking photo: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasPhoto = photoSeed != null && photoSeed!.isNotEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -30,8 +53,7 @@ class MissingPhotoStep extends StatelessWidget {
           child: Column(
             children: [
               GestureDetector(
-                onTap: () =>
-                    onPhotoChanged('seed-${DateTime.now().millisecondsSinceEpoch}'),
+                onTap: () => _pickPhoto(context, ImageSource.gallery),
                 child: Container(
                   width: double.infinity,
                   height: 200,
@@ -39,13 +61,13 @@ class MissingPhotoStep extends StatelessWidget {
                     color: context.palette.surfaceAlt.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(
-                      color: photoSeed == null
+                      color: !hasPhoto
                           ? context.palette.border
                           : AppColors.primary.withValues(alpha: 0.3),
-                      width: photoSeed == null ? 1 : 1.5,
+                      width: !hasPhoto ? 1 : 1.5,
                     ),
                   ),
-                  child: photoSeed == null
+                  child: !hasPhoto
                       ? Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -70,32 +92,59 @@ class MissingPhotoStep extends StatelessWidget {
                         )
                       : ClipRRect(
                           borderRadius: BorderRadius.circular(18),
-                          child: ChildPhoto(
-                              seed: photoSeed,
-                              size: 200,
-                              borderRadius: BorderRadius.circular(18))),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              ChildPhoto(
+                                seed: photoSeed,
+                                imagePath: photoSeed,
+                                size: 200,
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              Positioned(
+                                top: 10,
+                                right: 10,
+                                child: Material(
+                                  color: Colors.black.withValues(alpha: 0.6),
+                                  shape: const CircleBorder(),
+                                  child: InkWell(
+                                    customBorder: const CircleBorder(),
+                                    onTap: () => onPhotoChanged(null),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(6),
+                                      child: Icon(Icons.close_rounded,
+                                          size: 18, color: Colors.white),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(height: 14),
               Row(
                 children: [
                   Expanded(
-                      child: MissingSecondaryBtn(
-                          icon: Icons.camera_alt_outlined,
-                          label: context.tr('report.takePhoto'),
-                          onTap: () => onPhotoChanged(
-                              'seed-cam-${DateTime.now().millisecond}'))),
+                    child: MissingSecondaryBtn(
+                      icon: Icons.camera_alt_outlined,
+                      label: context.tr('report.takePhoto'),
+                      onTap: () => _pickPhoto(context, ImageSource.camera),
+                    ),
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
-                      child: MissingSecondaryBtn(
-                          icon: Icons.photo_library_outlined,
-                          label: context.tr('report.gallery'),
-                          outlined: true,
-                          onTap: () => onPhotoChanged(
-                              'seed-gal-${DateTime.now().millisecond}'))),
+                    child: MissingSecondaryBtn(
+                      icon: Icons.photo_library_outlined,
+                      label: context.tr('report.gallery'),
+                      outlined: true,
+                      onTap: () => _pickPhoto(context, ImageSource.gallery),
+                    ),
+                  ),
                 ],
               ),
-              if (photoSeed != null) ...[
+              if (hasPhoto) ...[
                 const SizedBox(height: 10),
                 Container(
                   padding:

@@ -1,15 +1,43 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../../../../../../core/router/app_router.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_dimens.dart';
 import '../../../../../../core/utils/context_extensions.dart';
 import 'filter_chip.dart';
 
-class SearchSection extends StatelessWidget {
+class SearchSection extends StatefulWidget {
   const SearchSection({super.key, required this.onSearchTap});
   final VoidCallback onSearchTap;
+
+  @override
+  State<SearchSection> createState() => _SearchSectionState();
+}
+
+class _SearchSectionState extends State<SearchSection> {
+  int _selected = 0;
+
+  void _onChipTapped(int index) {
+    setState(() => _selected = index);
+    if (index == 0) {
+      try {
+        AutoTabsRouter.of(context).setActiveIndex(1);
+      } catch (_) {
+        context.router.push(const MissingChildrenRoute());
+      }
+    } else if (index == 1) {
+      try {
+        AutoTabsRouter.of(context).setActiveIndex(2);
+      } catch (_) {
+        context.router.push(const MapRoute());
+      }
+    } else if (index == 2) {
+      context.router.push(const SearchRoute());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +59,7 @@ class SearchSection extends StatelessWidget {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: onSearchTap,
+                onTap: widget.onSearchTap,
                 borderRadius: BorderRadius.circular(20),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -75,16 +103,31 @@ class SearchSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          // Quick filter chips — urgent removed
+          // Quick filter chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
               children: [
-                HomeFilterChip(label: context.tr('home.filterAllCases'), icon: Icons.apps_rounded, selected: true),
+                HomeFilterChip(
+                  label: context.tr('home.filterAllCases'),
+                  icon: Icons.apps_rounded,
+                  selected: _selected == 0,
+                  onTap: () => _onChipTapped(0),
+                ),
                 const SizedBox(width: 8),
-                HomeFilterChip(label: context.tr('home.filterNearby'), icon: Icons.near_me_rounded, selected: false),
+                HomeFilterChip(
+                  label: context.tr('home.filterNearby'),
+                  icon: Icons.near_me_rounded,
+                  selected: _selected == 1,
+                  onTap: () => _onChipTapped(1),
+                ),
                 const SizedBox(width: 8),
-                HomeFilterChip(label: context.tr('home.filterToday'), icon: Icons.today_rounded, selected: false),
+                HomeFilterChip(
+                  label: context.tr('home.filterToday'),
+                  icon: Icons.today_rounded,
+                  selected: _selected == 2,
+                  onTap: () => _onChipTapped(2),
+                ),
               ],
             ),
           ),

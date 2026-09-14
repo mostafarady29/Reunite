@@ -86,24 +86,39 @@ class ChildCase {
       };
 
   factory ChildCase.fromJson(Map<String, dynamic> json) => ChildCase(
-        id: json['id'] as String,
-        type: ReportType.values.byName(json['type'] as String),
-        name: json['name'] as String,
-        age: (json['age'] as num).toInt(),
-        gender: Gender.values.byName(json['gender'] as String),
-        status: CaseStatus.values.byName(json['status'] as String),
-        urgency: UrgencyLevel.values.byName(json['urgency'] as String),
-        lastKnownLocation: json['lastKnownLocation'] as String,
-        city: json['city'] as String,
-        area: json['area'] as String,
-        missingSince: DateTime.parse(json['missingSince'] as String),
-        lastSeen:
-            DateTime.tryParse(json['lastSeen'] as String? ?? '') ??
-            DateTime.parse(json['missingSince'] as String),
-        clothing: json['clothing'] as String? ?? '',
-        description: json['description'] as String? ?? '',
-        distinguishingMarks: json['distinguishingMarks'] as String?,
-        photoPath: json['photoPath'] as String?,
+        id: json['id']?.toString() ?? '',
+        type: ReportType.values.firstWhere(
+          (e) => e.name.toLowerCase() == (json['type']?.toString().toLowerCase()),
+          orElse: () => ReportType.missing,
+        ),
+        name: json['name']?.toString() ?? 'Unknown',
+        age: (json['age'] is num)
+            ? (json['age'] as num).toInt()
+            : int.tryParse(json['age']?.toString() ?? '') ?? 0,
+        gender: Gender.values.firstWhere(
+          (e) => e.name.toLowerCase() == (json['gender']?.toString().toLowerCase()),
+          orElse: () => Gender.male,
+        ),
+        status: CaseStatus.values.firstWhere(
+          (e) => e.name.toLowerCase() == (json['status']?.toString().toLowerCase()),
+          orElse: () => CaseStatus.published,
+        ),
+        urgency: UrgencyLevel.values.firstWhere(
+          (e) => e.name.toLowerCase() == (json['urgency']?.toString().toLowerCase()),
+          orElse: () => UrgencyLevel.medium,
+        ),
+        lastKnownLocation: json['lastKnownLocation']?.toString() ?? '',
+        city: json['city']?.toString() ?? '',
+        area: json['area']?.toString() ?? '',
+        missingSince:
+            DateTime.tryParse(json['missingSince']?.toString() ?? '') ?? DateTime.now(),
+        lastSeen: DateTime.tryParse(json['lastSeen']?.toString() ?? '') ??
+            DateTime.tryParse(json['missingSince']?.toString() ?? '') ??
+            DateTime.now(),
+        clothing: json['clothing']?.toString() ?? '',
+        description: json['description']?.toString() ?? '',
+        distinguishingMarks: json['distinguishingMarks']?.toString(),
+        photoPath: json['photoPath']?.toString(),
         verified: json['verified'] as bool? ?? false,
         coordinates: json['coordinates'] == null
             ? null

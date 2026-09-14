@@ -1,11 +1,42 @@
+import crypto from 'crypto';
 import { FastifyPluginAsync } from 'fastify';
 import { reportRepository } from '../repositories/report.repository.js';
+import { photoRepository } from '../repositories/photo.repository.js';
+import { storageService } from '../core/storage/supabase-storage.js';
 import { locationRepository } from '../repositories/location.repository.js';
 import { commentRepository } from '../repositories/comment.repository.js';
 import { userRepository } from '../repositories/user.repository.js';
 import { agentMemoryService } from '../services/agent-memory.service.js';
 import { authenticate, optionalAuth } from '../middlewares/auth.middleware.js';
 import { NotFoundError, ValidationError } from '../core/errors/app-error.js';
+
+async function attachPhotoIfProvided(reportId: number, photoData?: any) {
+  if (!photoData || typeof photoData !== 'string' || !photoData.startsWith('data:image')) {
+    return;
+  }
+  try {
+    const commaIdx = photoData.indexOf(',');
+    const base64Str = commaIdx !== -1 ? photoData.substring(commaIdx + 1) : photoData;
+    const buffer = Buffer.from(base64Str, 'base64');
+    const mimeMatch = photoData.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const ext = mime === 'image/png' ? '.png' : mime === 'image/webp' ? '.webp' : '.jpg';
+    const storagePath = `reports/${reportId}/${crypto.randomUUID()}${ext}`;
+
+    if (storageService.isConfigured()) {
+      const uploaded = await storageService.uploadObject(storagePath, buffer, mime);
+      if (uploaded) {
+        const photo = await photoRepository.create(reportId, storagePath);
+        agentMemoryService
+          .extractEmbeddingFromImage(buffer, `photo${ext}`)
+          .then((vector) => agentMemoryService.upsertEmbedding(photo.photo_id, vector))
+          .catch((err) => console.warn('Embedding extraction deferred:', err));
+      }
+    }
+  } catch (err) {
+    console.error('Failed to attach case photo:', err);
+  }
+}
 
 export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
   // 1. GET /cases/missing
@@ -115,7 +146,10 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
       description: body.description || body.clothing || null,
     });
 
-    return reply.status(201).send({ success: true, data: report });
+    await attachPhotoIfProvided(report.report_id, body.photo || body.photoSeed);
+    const fullReport = await reportRepository.findById(report.report_id);
+
+    return reply.status(201).send({ success: true, data: fullReport || report });
   });
 
   // 8. POST /cases/found
@@ -145,7 +179,10 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
       description: body.description || body.clothing || null,
     });
 
-    return reply.status(201).send({ success: true, data: report });
+    await attachPhotoIfProvided(report.report_id, body.photo || body.photoSeed);
+    const fullReport = await reportRepository.findById(report.report_id);
+
+    return reply.status(201).send({ success: true, data: fullReport || report });
   });
 
   // 9. POST /sightings

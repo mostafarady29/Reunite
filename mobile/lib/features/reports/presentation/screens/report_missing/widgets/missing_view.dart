@@ -142,7 +142,9 @@ class _ModernMissingViewState extends State<ModernMissingView> {
         phone: _phone.text.trim(),
         email: _email.text.trim().isEmpty ? null : _email.text.trim(),
         photoSeed: _photoSeed));
-    if (!mounted || c == null) return;
-    context.router.push(ReportConfirmationRoute(caseId: c.id));
+    if (!mounted) return;
+    if (c != null) {
+      context.router.replace(ReportConfirmationRoute(caseId: c.id));
+    }
   }
 }

@@ -118,14 +118,38 @@ Map<String, dynamic> normalizeCaseJson(Map<String, dynamic> json) {
     return null;
   }
 
+  String mapStatus(String raw) {
+    final s = raw.toLowerCase();
+    if (s == 'open') return 'published';
+    if (s == 'closed') return 'caseClosed';
+    if (s == 'under_review' || s == 'underreview') return 'underReview';
+    if (s == 'possiblesighting' || s == 'possible_sighting') return 'possibleSighting';
+    if (s == 'childfound' || s == 'child_found') return 'childFound';
+    if (s == 'caseclosed' || s == 'case_closed') return 'caseClosed';
+    if (s == 'reported') return 'reported';
+    return 'published';
+  }
+
+  String mapGender(String raw) {
+    final g = raw.toLowerCase();
+    if (g == 'female' || g == 'f') return 'female';
+    return 'male';
+  }
+
+  String mapType(String raw) {
+    final t = raw.toLowerCase();
+    if (t == 'found') return 'found';
+    return 'missing';
+  }
+
   return {
     'id': str(['id', '_id', 'report_id']),
-    'type': str(['type', 'kind'], 'missing').toLowerCase(),
+    'type': mapType(str(['type', 'kind'], 'missing')),
     'name': str(['name', 'childName'], 'Unknown'),
     'age': pick<num>(['age', 'estimatedAge'], 0).toInt(),
-    'gender': str(['gender'], 'male'),
-    'status': str(['status'], 'published'),
-    'urgency': str(['urgency', 'priority'], 'medium'),
+    'gender': mapGender(str(['gender'], 'male')),
+    'status': mapStatus(str(['status'], 'published')),
+    'urgency': str(['urgency', 'priority'], 'medium').toLowerCase(),
     'lastKnownLocation': str(['lastKnownLocation', 'lastLocation', 'address']),
     'city': str(['city']),
     'area': str(['area', 'district']),

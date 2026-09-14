@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../../../core/router/app_router.dart';
 import '../../../../../../core/utils/context_extensions.dart';
@@ -40,6 +42,26 @@ class _ModernFoundViewState extends State<ModernFoundView> {
   Gender? _gender;
   String? _photoSeed;
 
+  Future<void> _pickPhoto() async {
+    try {
+      final picker = ImagePicker();
+      final XFile? picked = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 70,
+      );
+      if (picked != null) {
+        final bytes = await picked.readAsBytes();
+        final mime = picked.mimeType ?? 'image/jpeg';
+        final base64String = 'data:$mime;base64,${base64Encode(bytes)}';
+        setState(() => _photoSeed = base64String);
+      }
+    } catch (e) {
+      debugPrint('Error picking photo: $e');
+    }
+  }
+
   @override
   void dispose() {
     for (final c in [_age, _foundLocation, _clothing, _description, _extra]) {
@@ -69,8 +91,7 @@ class _ModernFoundViewState extends State<ModernFoundView> {
                   const SizedBox(height: 16),
                   FoundPhotoSection(
                     photoSeed: _photoSeed,
-                    onChanged: () => setState(() => _photoSeed =
-                        'found-${DateTime.now().millisecondsSinceEpoch}'),
+                    onChanged: _pickPhoto,
                     onClear: () => setState(() => _photoSeed = null),
                   ).animate().fadeIn(delay: 80.ms).slideY(begin: 0.04),
                   const SizedBox(height: 14),
@@ -118,6 +139,6 @@ class _ModernFoundViewState extends State<ModernFoundView> {
         description: _description.text.trim(),
         extraInfo: _extra.text.trim()));
     if (!mounted || caseData == null) return;
-    context.router.push(ReportConfirmationRoute(caseId: caseData.id));
+    context.router.replace(ReportConfirmationRoute(caseId: caseData.id));
   }
 }

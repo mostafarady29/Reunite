@@ -40,6 +40,8 @@ Map<String, dynamic> missingPayload(MissingReportInput input) => {
       if (input.phone != null) 'phone': input.phone,
       if (input.email != null) 'email': input.email,
       if (input.coordinates != null) 'coordinates': input.coordinates!.toJson(),
+      if (input.photoSeed != null) 'photo': input.photoSeed,
+      if (input.photoSeed != null) 'photoSeed': input.photoSeed,
     };
 
 Map<String, dynamic> foundPayload(FoundReportInput input) => {
@@ -54,6 +56,8 @@ Map<String, dynamic> foundPayload(FoundReportInput input) => {
       'description': input.description,
       if (input.extraInfo != null) 'extraInfo': input.extraInfo,
       if (input.coordinates != null) 'coordinates': input.coordinates!.toJson(),
+      if (input.photoSeed != null) 'photo': input.photoSeed,
+      if (input.photoSeed != null) 'photoSeed': input.photoSeed,
     };
 
 Map<String, dynamic> nearbyParams(LatLng location, int radiusMeters) => {

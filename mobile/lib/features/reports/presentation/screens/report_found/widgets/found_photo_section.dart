@@ -65,6 +65,7 @@ class FoundPhotoSection extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       child: ChildPhoto(
                           seed: photoSeed,
+                          imagePath: photoSeed,
                           size: 148,
                           borderRadius: BorderRadius.circular(16))),
             ),

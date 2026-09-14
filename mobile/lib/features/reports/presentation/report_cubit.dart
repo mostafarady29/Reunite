@@ -50,33 +50,37 @@ class ReportCubit extends Cubit<ReportState> {
 
   final ReportsRepository _repo;
   final bool isMissing;
+  int _step = 0;
 
-  int get step => switch (state) {
-        ReportIdle(:final step) => step,
-        ReportSubmitting(:final step) => step,
-        _ => 0,
-      };
+  int get step => _step;
 
   bool get submitting => state is ReportSubmitting;
 
   void next() {
-    final current = step;
-    if (current < 5) emit(ReportIdle(current + 1));
+    if (_step < 5) {
+      _step++;
+      emit(ReportIdle(_step));
+    }
   }
 
   void previous() {
-    final current = step;
-    if (current > 0) emit(ReportIdle(current - 1));
+    if (_step > 0) {
+      _step--;
+      emit(ReportIdle(_step));
+    }
   }
 
   Future<ChildCase?> submitMissing(MissingReportInput input) async {
-    emit(ReportSubmitting(step));
+    emit(ReportSubmitting(_step));
     try {
       final caseData = await _repo.submitMissing(input);
       emit(ReportSubmitted(caseData));
       return caseData;
     } on AppFailure catch (e) {
       emit(ReportError(e));
+      return null;
+    } catch (e) {
+      emit(ReportError(ServerFailure(details: e.toString())));
       return null;
     }
   }
@@ -89,6 +93,9 @@ class ReportCubit extends Cubit<ReportState> {
       return caseData;
     } on AppFailure catch (e) {
       emit(ReportError(e));
+      return null;
+    } catch (e) {
+      emit(ReportError(ServerFailure(details: e.toString())));
       return null;
     }
   }

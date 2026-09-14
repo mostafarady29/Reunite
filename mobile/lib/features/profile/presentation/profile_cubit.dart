@@ -120,7 +120,12 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   Future<void> logout() async {
-    await _repo.logout();
+    emit(const ProfileLoading());
+    try {
+      await _repo.logout();
+    } catch (_) {
+      // Even if the server call fails, clear the local session.
+    }
     getIt<AuthStore>()
       ..clear()
       ..saveGuest();

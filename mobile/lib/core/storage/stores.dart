@@ -17,11 +17,13 @@ class AuthStore {
   static String get _tokenKey => 'access_token';
   static String get _refreshKey => 'refresh_token';
   static String get _userIdKey => 'user_id';
+  static String get _userNameKey => 'user_name';
   static String get _isGuestKey => 'is_guest';
 
   String? get token => box.get(_tokenKey) as String?;
   String? get refreshToken => box.get(_refreshKey) as String?;
   String? get userId => box.get(_userIdKey) as String?;
+  String? get userName => box.get(_userNameKey) as String?;
   bool get isGuest => (box.get(_isGuestKey) as bool?) ?? true;
 
   bool get isAuthenticated => token != null && !isGuest;
@@ -30,10 +32,12 @@ class AuthStore {
     required String token,
     String? refreshToken,
     String? userId,
+    String? userName,
   }) {
     box.put(_tokenKey, token);
     if (refreshToken != null) box.put(_refreshKey, refreshToken);
     if (userId != null) box.put(_userIdKey, userId);
+    if (userName != null && userName.isNotEmpty) box.put(_userNameKey, userName);
     box.put(_isGuestKey, false);
   }
 
@@ -45,6 +49,7 @@ class AuthStore {
     box.delete(_tokenKey);
     box.delete(_refreshKey);
     box.delete(_userIdKey);
+    box.delete(_userNameKey);
     box.delete(_isGuestKey);
   }
 }

@@ -32,7 +32,13 @@ void saveAuthSession(AuthStore store, dynamic data, String fallbackId) {
   final refresh = (inner['refreshToken'] ?? inner['refresh']) as String?;
   final userMap = unwrapAuthData(data, 'user');
   final userId = (userMap['id'] ?? userMap['_id'] ?? fallbackId).toString();
+  final userName = (userMap['fullName'] ?? userMap['name'] ?? inner['name'] ?? inner['fullName'] ?? '').toString();
   if (token != null) {
-    store.saveSession(token: token, refreshToken: refresh, userId: userId);
+    store.saveSession(
+      token: token,
+      refreshToken: refresh,
+      userId: userId,
+      userName: userName.isNotEmpty ? userName : null,
+    );
   }
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 
+import '../../../../../../core/di/app_di.dart';
+import '../../../../../../core/storage/stores.dart';
 import '../../../../../../core/theme/app_colors.dart';
 import '../../../../../../core/theme/app_dimens.dart';
 import '../../../../../../core/utils/context_extensions.dart';
@@ -19,7 +21,10 @@ class ModernSliverHeader extends StatelessWidget {
         : hour < 18
             ? 'home.greetingAfternoon'
             : 'home.greetingEvening';
-    const userName = 'عمر';
+    final authStore = getIt<AuthStore>();
+    final rawName = authStore.userName?.trim();
+    final userName = (rawName != null && rawName.isNotEmpty) ? rawName : 'مصطفى';
+    final initialLetter = userName.isNotEmpty ? userName.substring(0, 1).toUpperCase() : 'م';
 
     return SliverAppBar(
       pinned: true,
@@ -51,14 +56,14 @@ class ModernSliverHeader extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(2.5),
                         decoration: const BoxDecoration(
-                          gradient: AppColors.brandGradient,
+                           gradient: AppColors.brandGradient,
                           shape: BoxShape.circle,
                         ),
                         child: CircleAvatar(
                           radius: 24,
                           backgroundColor: context.palette.surface,
                           child: Text(
-                            'ع',
+                            initialLetter,
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w800,

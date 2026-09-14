@@ -17,6 +17,7 @@ import { casesMobileRoutes } from './routes/cases-mobile.routes.js';
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
+    bodyLimit: 50 * 1024 * 1024, // 50MB to support base64 photo uploads
     logger:
       env.NODE_ENV === 'test'
         ? false
