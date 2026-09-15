@@ -160,7 +160,7 @@
     "mapTitle": "Last seen location",
     "myLocation": "Your location",
     "possibleMatches": "Possible matches",
-    "matchCount": "We found %{count} reports that may match this child",
+    "matchCount": "We found {count} reports that may match this child",
     "matchPercentage": "Match percentage",
     "timeDiff": "Time difference",
     "notGuaranteed": "These matches are only potential and require further verification.",
@@ -226,7 +226,7 @@
     "foundDate": "Date found",
     "extraInfo": "Additional information",
     "submitFound": "Submit found report",
-    "stepOf": "Step %{current} of %{total}",
+    "stepOf": "Step {current} of {total}",
     "safetyNotice": "About safety",
     "safetyTitle": "Safety guidelines",
     "safetyBody": "Do not transport or hide the child on your own. Please contact authorities or the nearest police station, and stay with the child in a safe place until help arrives.",
@@ -262,7 +262,7 @@
     "success": "Success",
     "today": "Today",
     "yesterday": "Yesterday",
-    "daysAgo": "%{count} days ago",
+    "daysAgo": "{count} days ago",
     "all": "All",
     "unread": "Unread",
     "urgent": "Urgent",
@@ -404,10 +404,14 @@
   },
   "timeAgo": {
     "justNow": "just now",
-    "minutes": "%{count} minutes ago",
-    "hours": "%{count} hours ago",
-    "days": "%{count} days ago",
-    "weeks": "%{count} weeks ago"
+    "minutes": "{count} minutes ago",
+    "hours": "{count} hours ago",
+    "days": "{count} days ago",
+    "weeks": "{count} weeks ago"
+  },
+  "gender": {
+    "male": "Male",
+    "female": "Female"
   },
   "urgency": {
     "high": "Urgent",
@@ -434,7 +438,7 @@
   },
   "notif": {
     "nearbyTitle": "Child missing nearby",
-    "nearbyBody": "A child was reported missing near %{place}",
+    "nearbyBody": "A child was reported missing near {place}",
     "updateTitle": "Case update",
     "updateBody": "Your report status has changed",
     "matchTitle": "Possible match found",

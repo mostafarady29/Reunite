@@ -126,12 +126,16 @@ class GridCard extends StatelessWidget {
   }
 
   String _timeAgo(BuildContext context) {
-    final mins = DateTime.now().difference(caseData.missingSince).inMinutes;
+    final timestamp = caseData.createdAt ?? caseData.missingSince;
+    final diff = DateTime.now().toUtc().difference(timestamp.toUtc());
+    final mins = diff.inMinutes;
     if (mins < 1) return context.tr('timeAgo.justNow');
     if (mins < 60) return context.tr('timeAgo.minutes', namedArgs: {'count': '$mins'});
-    final hrs = (mins / 60).floor();
+    final hrs = diff.inHours;
     if (hrs < 24) return context.tr('timeAgo.hours', namedArgs: {'count': '$hrs'});
-    final days = (hrs / 24).floor();
-    return context.tr('timeAgo.days', namedArgs: {'count': '$days'});
+    final days = diff.inDays;
+    if (days < 7) return context.tr('timeAgo.days', namedArgs: {'count': '$days'});
+    final weeks = (days / 7).floor();
+    return context.tr('timeAgo.weeks', namedArgs: {'count': '$weeks'});
   }
 }

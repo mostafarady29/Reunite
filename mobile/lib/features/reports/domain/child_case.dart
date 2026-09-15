@@ -27,6 +27,7 @@ class ChildCase {
     this.reporter,
     this.verified = false,
     this.coordinates,
+    this.createdAt,
   });
 
   final String id;
@@ -55,6 +56,7 @@ class ChildCase {
   final String? photoPath;
   final User? reporter;
   final bool verified;
+  final DateTime? createdAt;
 
   bool get isMissing => type == ReportType.missing;
   bool get isFound => type == ReportType.found;
@@ -83,6 +85,7 @@ class ChildCase {
         'photoPath': photoPath,
         'verified': verified,
         'coordinates': coordinates?.toJson(),
+        'createdAt': createdAt?.toIso8601String(),
       };
 
   factory ChildCase.fromJson(Map<String, dynamic> json) => ChildCase(
@@ -123,5 +126,7 @@ class ChildCase {
         coordinates: json['coordinates'] == null
             ? null
             : LatLng.fromJson(json['coordinates'] as Map<String, dynamic>),
+        createdAt: DateTime.tryParse(json['createdAt']?.toString() ?? '') ??
+            DateTime.tryParse(json['created_at']?.toString() ?? ''),
       );
 }

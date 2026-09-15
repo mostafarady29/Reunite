@@ -163,6 +163,7 @@ Map<String, dynamic> normalizeCaseJson(Map<String, dynamic> json) {
     'photoPath': extractPhotoPath(),
     'verified': json['verified'] ?? json['isVerified'] ?? false,
     'coordinates': coords ?? json['coordinates'],
+    'createdAt': str(['created_at', 'createdAt']),
   };
 }
 

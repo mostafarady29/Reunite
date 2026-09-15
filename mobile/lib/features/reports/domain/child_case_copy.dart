@@ -24,6 +24,7 @@ extension ChildCaseCopy on ChildCase {
     User? Function()? reporter,
     bool? verified,
     LatLng? coordinates,
+    DateTime? createdAt,
   }) {
     return ChildCase(
       id: id ?? this.id,
@@ -47,6 +48,7 @@ extension ChildCaseCopy on ChildCase {
       reporter: reporter != null ? reporter() : this.reporter,
       verified: verified ?? this.verified,
       coordinates: coordinates ?? this.coordinates,
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

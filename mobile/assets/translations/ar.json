@@ -158,7 +158,7 @@
     "mapTitle": "موقع آخر ظهور",
     "myLocation": "موقعك",
     "possibleMatches": "بلاغات متطابقة محتملة",
-    "matchCount": "وجدنا %{count} بلاغات قد تتطابق مع هذا الطفل",
+    "matchCount": "وجدنا {count} بلاغات قد تتطابق مع هذا الطفل",
     "matchPercentage": "نسبة التطابق",
     "timeDiff": "فرق الوقت",
     "notGuaranteed": "هذه التطابقات محتملة فقط وتحتاج إلى تحقق إضافي.",
@@ -224,7 +224,7 @@
     "foundDate": "تاريخ العثور",
     "extraInfo": "معلومات إضافية",
     "submitFound": "إرسال بلاغ العثور",
-    "stepOf": "الخطوة %{current} من %{total}",
+    "stepOf": "الخطوة {current} من {total}",
     "safetyNotice": "حول الأمان",
     "safetyTitle": "أرشادات الأمان",
     "safetyBody": "لا يجب نقل الطفل أو إخفاؤه بمفردك. يرجى التواصل مع الجهات المختصة أو أقرب مركز شرطة، والبقاء مع الطفل في مكان آمن حتى وصول المساعدة.",
@@ -260,7 +260,7 @@
     "success": "نجاح",
     "today": "اليوم",
     "yesterday": "أمس",
-    "daysAgo": "منذ %{count} يوم",
+    "daysAgo": "منذ {count} يوم",
     "all": "الكل",
     "unread": "غير مقروء",
     "urgent": "عاجل",
@@ -402,10 +402,14 @@
   },
   "timeAgo": {
     "justNow": "الآن",
-    "minutes": "منذ %{count} دقيقة",
-    "hours": "منذ %{count} ساعة",
-    "days": "منذ %{count} يوم",
-    "weeks": "منذ %{count} أسبوع"
+    "minutes": "منذ {count} دقيقة",
+    "hours": "منذ {count} ساعة",
+    "days": "منذ {count} يوم",
+    "weeks": "منذ {count} أسبوع"
+  },
+  "gender": {
+    "male": "ذكر",
+    "female": "أنثى"
   },
   "urgency": {
     "high": "عاجل",
@@ -432,7 +436,7 @@
   },
   "notif": {
     "nearbyTitle": "طفل مفقود بالقرب منك",
-    "nearbyBody": "تم الإبلاغ عن طفل مفقود بالقرب من %{place}",
+    "nearbyBody": "تم الإبلاغ عن طفل مفقود بالقرب من {place}",
     "updateTitle": "تحديث الحالة",
     "updateBody": "تم تغيير حالة بلاغك",
     "matchTitle": "تم العثور على تطابق محتمل",
