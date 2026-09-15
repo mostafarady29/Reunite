@@ -30,6 +30,7 @@ class ApiEndpoints {
   // Notifications
   static const String notifications = '/notifications';
   static const String notificationsReadAll = '/notifications/read-all';
+  static const String registerDeviceToken = '/notifications/device-token';
 
   // Locations (governorates + cities for dropdowns)
   static const String governorates = '/locations/governorates';

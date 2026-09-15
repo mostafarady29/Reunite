@@ -7,6 +7,8 @@ import { locationRepository } from '../repositories/location.repository.js';
 import { commentRepository } from '../repositories/comment.repository.js';
 import { userRepository } from '../repositories/user.repository.js';
 import { agentMemoryService } from '../services/agent-memory.service.js';
+import { notificationRepository } from '../repositories/notification.repository.js';
+import { fcmService } from '../services/fcm.service.js';
 import { authenticate, optionalAuth } from '../middlewares/auth.middleware.js';
 import { NotFoundError, ValidationError } from '../core/errors/app-error.js';
 
@@ -149,6 +151,19 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
     await attachPhotoIfProvided(report.report_id, body.photo || body.photoSeed);
     const fullReport = await reportRepository.findById(report.report_id);
 
+    // Send FCM push broadcast for emergency missing child
+    fcmService
+      .sendBroadcast({
+        type: 'emergency',
+        title: 'تنبيه طفل مفقود عاجل',
+        body: `تم الإبلاغ عن اختفاء طفل: ${body.name || 'طفل مجهول'}`,
+        caseId: String(report.report_id),
+        data: {
+          caseId: String(report.report_id),
+        },
+      })
+      .catch((err) => request.log.error(err, 'Failed to send missing case FCM broadcast'));
+
     return reply.status(201).send({ success: true, data: fullReport || report });
   });
 
@@ -209,6 +224,21 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
 
     const comment = await commentRepository.create(caseId, userId, content);
 
+    // Notify report owner if another user reports a sighting
+    if (report.user_id && report.user_id !== userId) {
+      fcmService
+        .sendToUser(report.user_id, {
+          type: 'sighting',
+          title: 'مشاهدة جديدة بخصوص بلاغك',
+          body: `تم الإبلاغ عن مشاهدة جديدة للطفل: ${report.name}`,
+          caseId: String(caseId),
+          data: {
+            caseId: String(caseId),
+          },
+        })
+        .catch((err) => request.log.error(err, 'Failed to send sighting notification to report owner'));
+    }
+
     return reply.status(201).send({
       success: true,
       data: {
@@ -246,13 +276,45 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send({ success: true, data: all });
   });
 
-  // 22. GET /notifications (Mobile notifications feed)
-  fastify.get('/notifications', async (_request, reply) => {
-    return reply.send({ success: true, data: [] });
+  // 22. POST /notifications/device-token (Register FCM device token)
+  fastify.post('/notifications/device-token', { preHandler: [optionalAuth] }, async (request, reply) => {
+    const body = request.body as { token?: string; platform?: string };
+    if (!body?.token) {
+      throw new ValidationError('Device token is required.');
+    }
+    const userId = request.currentUser ? request.currentUser.user_id : null;
+    await notificationRepository.saveDeviceToken(userId, body.token, body.platform || 'android');
+    return reply.send({ success: true, message: 'Device token registered successfully.' });
   });
 
-  // 23. POST /notifications/read-all (Mark notifications read)
-  fastify.post('/notifications/read-all', async (_request, reply) => {
+  // 23. GET /notifications (Mobile notifications feed)
+  fastify.get('/notifications', { preHandler: [optionalAuth] }, async (request, reply) => {
+    if (!request.currentUser) {
+      return reply.send({ success: true, data: [] });
+    }
+    const records = await notificationRepository.getNotificationsByUserId(
+      request.currentUser.user_id
+    );
+    const data = records.map((r) => ({
+      id: String(r.notification_id),
+      type: r.type,
+      titleKey: r.title,
+      title: r.title,
+      bodyKey: r.body,
+      body: r.body,
+      createdAt: r.created_at,
+      caseId: r.case_id ? String(r.case_id) : null,
+      namedArgs: r.metadata || {},
+      read: r.is_read,
+    }));
+    return reply.send({ success: true, data });
+  });
+
+  // 24. POST /notifications/read-all (Mark notifications read)
+  fastify.post('/notifications/read-all', { preHandler: [optionalAuth] }, async (request, reply) => {
+    if (request.currentUser) {
+      await notificationRepository.markAllRead(request.currentUser.user_id);
+    }
     return reply.send({
       success: true,
       data: { message: 'All notifications marked as read.' },

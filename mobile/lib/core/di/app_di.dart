@@ -21,7 +21,7 @@ Future<void> initCoreDependencies() async {
   getIt.registerLazySingleton<ConnectivityService>(() => ConnectivityService.instance);
   getIt.registerLazySingleton<LocationService>(() => GeolocatorLocationService());
   getIt.registerLazySingleton<PushNotificationService>(
-    () => MockPushNotificationService(),
+    () => FcmPushNotificationService(),
   );
 
   // Let the API interceptor read tokens lazily.

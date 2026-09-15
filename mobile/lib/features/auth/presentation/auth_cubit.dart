@@ -7,6 +7,10 @@ import '../data/auth_repository.dart';
 import '../domain/user.dart';
 import 'auth_state.dart';
 
+import '../../../../core/network/api_client.dart';
+import '../../../../core/network/api_endpoints.dart';
+import '../../../../core/services/push_notification_service.dart';
+
 export 'auth_events.dart';
 export 'auth_state.dart';
 
@@ -30,6 +34,24 @@ class AuthCubit extends Cubit<AuthState> {
         refreshToken: store.refreshToken,
       );
     }
+
+    // Link device FCM token to the logged-in user
+    final push = getIt.isRegistered<PushNotificationService>()
+        ? getIt<PushNotificationService>()
+        : null;
+    if (push != null) {
+      push.getToken().then((token) async {
+        if (token != null && getIt.isRegistered<ApiClient>()) {
+          try {
+            await getIt<ApiClient>().run((dio) => dio.post(
+                  ApiEndpoints.registerDeviceToken,
+                  data: {'token': token, 'platform': 'android'},
+                ));
+          } catch (_) {}
+        }
+      });
+    }
+
     emit(AuthSuccess(user));
     return AuthResult.success;
   }
