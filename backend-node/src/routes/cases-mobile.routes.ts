@@ -204,6 +204,44 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
     await attachPhotoIfProvided(report.report_id, body.photo || body.photoSeed);
     const fullReport = await reportRepository.findById(report.report_id);
 
+    // 1. Broadcast notification to community that a found child was reported
+    fcmService
+      .sendBroadcast({
+        type: 'caseUpdate',
+        title: 'تم العثور على طفل',
+        body: `تم الإبلاغ عن العثور على طفل: ${body.name || 'طفل تم العثور عليه'}`,
+        caseId: String(report.report_id),
+        data: {
+          caseId: String(report.report_id),
+          childName: body.name || '',
+        },
+      })
+      .catch((err) => request.log.error(err, 'Failed to send found case FCM broadcast'));
+
+    // 2. Check AI memory / matches against missing children!
+    // If any missing child has a match, notify the reporter/family of that missing child!
+    agentMemoryService
+      .findPossibleMatchesForCase(report.report_id)
+      .then(async (matches) => {
+        for (const match of matches) {
+          const targetCase = match.foundCase;
+          if (targetCase && targetCase.user_id && targetCase.user_id !== userId) {
+            await fcmService.sendToUser(targetCase.user_id, {
+              type: 'possibleMatch',
+              title: 'تطابق محتمل لحالة طفلك المفقود!',
+              body: `تم العثور على طفل قد يتطابق مع بلاغك عن (${targetCase.name}) بنسبة تطابق ${match.matchPercent}%`,
+              caseId: String(targetCase.report_id),
+              data: {
+                caseId: String(targetCase.report_id),
+                foundCaseId: String(report.report_id),
+                similarity: String(match.matchPercent),
+              },
+            });
+          }
+        }
+      })
+      .catch((err) => request.log.error(err, 'Failed to match found child against missing cases'));
+
     return reply.status(201).send({ success: true, data: fullReport || report });
   });
 
@@ -296,12 +334,8 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
 
   // 23. GET /notifications (Mobile notifications feed)
   fastify.get('/notifications', { preHandler: [optionalAuth] }, async (request, reply) => {
-    if (!request.currentUser) {
-      return reply.send({ success: true, data: [] });
-    }
-    const records = await notificationRepository.getNotificationsByUserId(
-      request.currentUser.user_id
-    );
+    const userId = request.currentUser ? request.currentUser.user_id : null;
+    const records = await notificationRepository.getNotificationsByUserId(userId);
     const data = records.map((r) => ({
       id: String(r.notification_id),
       type: r.type,

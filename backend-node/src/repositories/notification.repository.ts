@@ -11,7 +11,7 @@ export interface DeviceTokenRecord {
 
 export interface NotificationRecord {
   notification_id: number;
-  user_id: number;
+  user_id: number | null;
   type: string;
   title: string;
   body: string;
@@ -58,7 +58,7 @@ export class NotificationRepository {
   }
 
   public async createNotification(data: {
-    userId: number;
+    userId: number | null;
     type: string;
     title: string;
     body: string;
@@ -70,7 +70,7 @@ export class NotificationRepository {
        VALUES ($1, $2, $3, $4, $5, $6, false, NOW())
        RETURNING *`,
       [
-        data.userId,
+        data.userId ?? null,
         data.type,
         data.title,
         data.body,
@@ -82,22 +82,33 @@ export class NotificationRepository {
   }
 
   public async getNotificationsByUserId(
-    userId: number,
+    userId: number | null,
     limit: number = 50
   ): Promise<NotificationRecord[]> {
-    const { rows } = await query<NotificationRecord>(
-      `SELECT * FROM "notification"
-       WHERE user_id = $1
-       ORDER BY created_at DESC
-       LIMIT $2`,
-      [userId, limit]
-    );
-    return rows;
+    if (userId) {
+      const { rows } = await query<NotificationRecord>(
+        `SELECT * FROM "notification"
+         WHERE user_id = $1 OR user_id IS NULL
+         ORDER BY created_at DESC
+         LIMIT $2`,
+        [userId, limit]
+      );
+      return rows;
+    } else {
+      const { rows } = await query<NotificationRecord>(
+        `SELECT * FROM "notification"
+         WHERE user_id IS NULL
+         ORDER BY created_at DESC
+         LIMIT $1`,
+        [limit]
+      );
+      return rows;
+    }
   }
 
   public async markAllRead(userId: number): Promise<void> {
     await query(
-      `UPDATE "notification" SET is_read = true WHERE user_id = $1 AND is_read = false`,
+      `UPDATE "notification" SET is_read = true WHERE (user_id = $1 OR user_id IS NULL) AND is_read = false`,
       [userId]
     );
   }

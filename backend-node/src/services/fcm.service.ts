@@ -178,6 +178,17 @@ class FcmService {
   }
 
   public async sendBroadcast(payload: NotificationPayload): Promise<void> {
+    // 1. Always persist broadcast notification to DB for all users
+    await notificationRepository.createNotification({
+      userId: null,
+      type: payload.type || 'caseUpdate',
+      title: payload.title,
+      body: payload.body,
+      caseId: payload.caseId ? parseInt(payload.caseId, 10) || null : null,
+      metadata: payload.data || {},
+    });
+
+    // 2. Multicast to all registered device tokens
     const tokens = await notificationRepository.getAllTokens();
     if (tokens.length > 0) {
       await this.sendToTokens(tokens, payload);
