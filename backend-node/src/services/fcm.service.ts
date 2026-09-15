@@ -34,15 +34,28 @@ class FcmService {
     }
 
     try {
-      // 1. Check environment variable for raw JSON or file path
-      const envCred = process.env.FIREBASE_SERVICE_ACCOUNT;
-      if (envCred) {
+      // 1. Check environment variable for raw JSON, base64-encoded JSON, or file path
+      let envCred = process.env.FIREBASE_SERVICE_ACCOUNT;
+      if (envCred && envCred.trim().length > 0) {
         let certObj: any;
-        if (envCred.trim().startsWith('{')) {
-          certObj = JSON.parse(envCred);
-        } else if (fs.existsSync(envCred)) {
-          certObj = JSON.parse(fs.readFileSync(envCred, 'utf8'));
+        let trimmed = envCred.trim();
+
+        // Check if Base64 encoded string
+        if (!trimmed.startsWith('{') && !fs.existsSync(trimmed)) {
+          try {
+            const decoded = Buffer.from(trimmed, 'base64').toString('utf8');
+            if (decoded.trim().startsWith('{')) {
+              trimmed = decoded.trim();
+            }
+          } catch (_) {}
         }
+
+        if (trimmed.startsWith('{')) {
+          certObj = JSON.parse(trimmed);
+        } else if (fs.existsSync(trimmed)) {
+          certObj = JSON.parse(fs.readFileSync(trimmed, 'utf8'));
+        }
+
         if (certObj) {
           this.app = initializeApp({
             credential: cert(certObj),

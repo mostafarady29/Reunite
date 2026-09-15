@@ -32,6 +32,7 @@ const envSchema = z.object({
   AI_TOKEN: z.string().optional().default(''),
   AI_API_NAME: z.string().default('/embed'),
   EMBEDDING_DIM: z.coerce.number().int().positive().default(512),
+  FIREBASE_SERVICE_ACCOUNT: z.string().optional().default(''),
 });
 
 export type Env = z.infer<typeof envSchema>;
