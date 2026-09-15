@@ -11,6 +11,13 @@ import { notificationRepository } from '../repositories/notification.repository.
 import { fcmService } from '../services/fcm.service.js';
 import { authenticate, optionalAuth } from '../middlewares/auth.middleware.js';
 import { NotFoundError, ValidationError } from '../core/errors/app-error.js';
+import { query } from '../core/database/pool.js';
+
+async function getEffectiveUserId(currentUserId?: number): Promise<number> {
+  if (currentUserId) return currentUserId;
+  const { rows } = await query<{ user_id: number }>('SELECT user_id FROM "User" ORDER BY user_id ASC LIMIT 1');
+  return rows[0]?.user_id ?? 1;
+}
 
 async function attachPhotoIfProvided(reportId: number, photoData?: any) {
   if (!photoData || typeof photoData !== 'string' || !photoData.startsWith('data:image')) {
@@ -124,7 +131,7 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
   // 7. POST /cases/missing
   fastify.post('/cases/missing', { preHandler: [optionalAuth] }, async (request, reply) => {
     const body = request.body as Record<string, any>;
-    const userId = request.currentUser?.user_id || 1; // Default to community/first user if unauthenticated
+    const userId = await getEffectiveUserId(request.currentUser?.user_id);
 
     let lat: number | null = null;
     let lng: number | null = null;
@@ -170,7 +177,7 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
   // 8. POST /cases/found
   fastify.post('/cases/found', { preHandler: [optionalAuth] }, async (request, reply) => {
     const body = request.body as Record<string, any>;
-    const userId = request.currentUser?.user_id || 1;
+    const userId = await getEffectiveUserId(request.currentUser?.user_id);
 
     let lat: number | null = null;
     let lng: number | null = null;
@@ -213,7 +220,7 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
       throw new NotFoundError('Report case not found.');
     }
 
-    const userId = request.currentUser?.user_id || 1;
+    const userId = await getEffectiveUserId(request.currentUser?.user_id);
     const locationInfo =
       body.latitude && body.longitude
         ? `[Sighting at coordinates (${body.latitude}, ${body.longitude})] `
