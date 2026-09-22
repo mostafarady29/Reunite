@@ -50,7 +50,20 @@ class ChildCaseCard extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text('${caseData.age} ${context.tr('missing.yearsOld')}  •  ${context.tr(caseData.gender.key)}', maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall?.copyWith(color: context.palette.textSecondary, fontSize: 12.5, height: 1.3)),
                     const SizedBox(height: 7),
-                    Row(children: [Icon(Icons.location_on_rounded, size: 13, color: context.palette.textMuted), const SizedBox(width: 3), Expanded(child: Text(caseData.area, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.textTheme.bodySmall?.copyWith(color: context.palette.textMuted, fontSize: 12)))]),
+                    Row(children: [
+                      Icon(Icons.location_on_rounded, size: 13, color: context.palette.textMuted),
+                      const SizedBox(width: 3),
+                      Expanded(
+                        child: Text(
+                          caseData.area.isNotEmpty
+                              ? caseData.area
+                              : (caseData.lastKnownLocation.isNotEmpty ? caseData.lastKnownLocation : caseData.city),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.textTheme.bodySmall?.copyWith(color: context.palette.textMuted, fontSize: 12),
+                        ),
+                      ),
+                    ]),
                     const SizedBox(height: 3),
                     Row(
                       children: [

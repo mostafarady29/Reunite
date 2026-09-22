@@ -91,17 +91,47 @@ Map<String, dynamic> normalizeCaseJson(Map<String, dynamic> json) {
     return fallback as T;
   }
 
-  final coordsRaw = pick<Map?>(['coordinates', 'location', 'geo'], null);
+  double? parseDouble(dynamic v) {
+    if (v is num) return v.toDouble();
+    if (v is String) return double.tryParse(v);
+    return null;
+  }
+
+  final coordsRaw = pick<dynamic>(['coordinates', 'location', 'geo'], null);
   Map<String, dynamic>? coords;
   if (coordsRaw is Map) {
     final m = coordsRaw.map((k, v) => MapEntry(k.toString(), v));
-    final lat = m['lat'] ?? m['latitude'];
-    final lng = m['lng'] ?? m['longitude'] ?? m['lon'];
-    if (lat is num && lng is num) coords = {'lat': lat.toDouble(), 'lng': lng.toDouble()};
+    final lat = parseDouble(m['lat'] ?? m['latitude']);
+    final lng = parseDouble(m['lng'] ?? m['longitude'] ?? m['lon']);
+    if (lat != null && lng != null) coords = {'lat': lat, 'lng': lng};
   } else {
-    final lat = json['lat'] ?? json['latitude'];
-    final lng = json['lng'] ?? json['longitude'] ?? json['lon'];
-    if (lat is num && lng is num) coords = {'lat': lat.toDouble(), 'lng': lng.toDouble()};
+    final lat = parseDouble(json['lat'] ?? json['latitude']);
+    final lng = parseDouble(json['lng'] ?? json['longitude'] ?? json['lon']);
+    if (lat != null && lng != null) coords = {'lat': lat, 'lng': lng};
+  }
+
+  final nearestPlace = json['nearest_place'] ?? json['nearestPlace'];
+  String defaultLocation = '';
+  String defaultCity = '';
+  String defaultArea = '';
+  if (nearestPlace is Map) {
+    final np = nearestPlace.map((k, v) => MapEntry(k.toString(), v));
+    defaultLocation = np['formatted']?.toString() ?? np['name']?.toString() ?? '';
+    defaultCity = np['name']?.toString() ?? '';
+    defaultArea = np['governorate']?.toString() ?? defaultLocation;
+  }
+  if (defaultLocation.isEmpty) {
+    defaultLocation = json['location_name']?.toString() ??
+        json['nearest_location']?.toString() ??
+        json['locationName']?.toString() ??
+        json['nearestLocation']?.toString() ??
+        '';
+  }
+  if (defaultCity.isEmpty && defaultLocation.isNotEmpty) {
+    defaultCity = defaultLocation.split('،').first.trim();
+  }
+  if (defaultArea.isEmpty && defaultLocation.isNotEmpty) {
+    defaultArea = defaultLocation;
   }
 
   String str(List<String> keys, [String fallback = '']) =>
@@ -150,9 +180,11 @@ Map<String, dynamic> normalizeCaseJson(Map<String, dynamic> json) {
     'gender': mapGender(str(['gender'], 'male')),
     'status': mapStatus(str(['status'], 'published')),
     'urgency': str(['urgency', 'priority'], 'medium').toLowerCase(),
-    'lastKnownLocation': str(['lastKnownLocation', 'lastLocation', 'address']),
-    'city': str(['city']),
-    'area': str(['area', 'district']),
+    'lastKnownLocation': str(
+        ['lastKnownLocation', 'lastLocation', 'location_name', 'nearest_location', 'address'],
+        defaultLocation),
+    'city': str(['city'], defaultCity),
+    'area': str(['area', 'district'], defaultArea.isNotEmpty ? defaultArea : defaultLocation),
     'missingSince':
         str(['missingSince', 'missingAt', 'occurrence_date', 'createdAt'], DateTime.now().toIso8601String()),
     'lastSeen': str(['lastSeen', 'lastSeenAt', 'occurrence_date', 'updatedAt', 'missingSince'],

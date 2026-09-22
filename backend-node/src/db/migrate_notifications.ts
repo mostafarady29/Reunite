@@ -32,6 +32,11 @@ export async function runMigration() {
     );
   `);
 
+  await query(`ALTER TABLE "notification" ADD COLUMN IF NOT EXISTS "title" VARCHAR(255);`);
+  await query(`ALTER TABLE "notification" ADD COLUMN IF NOT EXISTS "body" TEXT;`);
+  await query(`ALTER TABLE "notification" ADD COLUMN IF NOT EXISTS "metadata" JSONB DEFAULT '{}';`);
+  await query(`ALTER TABLE "notification" ADD COLUMN IF NOT EXISTS "case_id" INT;`);
+
   await query(`
     CREATE INDEX IF NOT EXISTS "idx_notification_user" ON "notification"("user_id");
   `);

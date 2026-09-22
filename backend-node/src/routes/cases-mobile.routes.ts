@@ -91,6 +91,9 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
         location_name: locationName,
         nearest_location: locationName,
         nearest_place: nearest,
+        lastKnownLocation: locationName || (item as any).lastKnownLocation || null,
+        city: nearest?.name || (item as any).city || null,
+        area: nearest?.governorate || (item as any).area || locationName || null,
       };
     });
 

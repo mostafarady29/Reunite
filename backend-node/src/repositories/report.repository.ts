@@ -1,6 +1,8 @@
 import { query, withTransaction } from '../core/database/pool.js';
 import { storageService } from '../core/storage/supabase-storage.js';
 
+import { locationResolverService, NearestPlaceResult } from '../services/location-resolver.service.js';
+
 export interface ReportPhoto {
   id: number;
   path: string;
@@ -16,6 +18,9 @@ export interface ReportRecord {
   gender: string | null;
   occurrence_date: string | null;
   occurrence_location?: string | null;
+  location_name?: string | null;
+  nearest_location?: string | null;
+  nearest_place?: NearestPlaceResult | null;
   latitude: number | null;
   longitude: number | null;
   description: string | null;
@@ -42,6 +47,27 @@ export class ReportRepository {
   public async normalizeReport(row: any): Promise<ReportRecord> {
     const report: ReportRecord = { ...row };
 
+    // Resolve nearest place name from coordinates
+    if (
+      report.latitude !== null &&
+      report.latitude !== undefined &&
+      report.longitude !== null &&
+      report.longitude !== undefined
+    ) {
+      const nearest = locationResolverService.getNearestPlace(
+        Number(report.latitude),
+        Number(report.longitude)
+      );
+      if (nearest) {
+        report.location_name = nearest.formatted;
+        report.nearest_location = nearest.formatted;
+        report.nearest_place = nearest;
+        (report as any).lastKnownLocation = nearest.formatted;
+        (report as any).city = nearest.name;
+        (report as any).area = nearest.governorate;
+      }
+    }
+
     // Format coordinates string for backwards compatibility
     if (
       !report.occurrence_location &&
@@ -50,7 +76,7 @@ export class ReportRepository {
       report.longitude !== null &&
       report.longitude !== undefined
     ) {
-      report.occurrence_location = `(${report.longitude},${report.latitude})`;
+      report.occurrence_location = report.location_name || `(${report.longitude},${report.latitude})`;
     }
 
     // Standardize Case kind: "Missing" | "Found"
