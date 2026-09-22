@@ -24,6 +24,7 @@ export interface ReportRecord {
   latitude: number | null;
   longitude: number | null;
   description: string | null;
+  clothing?: string | null;
   status: string;
   created_at: string;
   closed_at: string | null;
@@ -67,6 +68,8 @@ export class ReportRepository {
         (report as any).area = nearest.governorate;
       }
     }
+
+    report.clothing = row.clothing ?? null;
 
     // Format coordinates string for backwards compatibility
     if (
@@ -238,14 +241,15 @@ export class ReportRepository {
     latitude?: number | null;
     longitude?: number | null;
     description?: string | null;
+    clothing?: string | null;
   }): Promise<ReportRecord> {
     const sql = `
       INSERT INTO report (
         user_id, kind, name, age, gender, 
-        occurrence_date, latitude, longitude, description, 
+        occurrence_date, latitude, longitude, description, clothing,
         status, created_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'OPEN', now())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'OPEN', now())
       RETURNING *
     `;
     const { rows } = await query(sql, [
@@ -258,6 +262,7 @@ export class ReportRepository {
       data.latitude ?? null,
       data.longitude ?? null,
       data.description ?? null,
+      data.clothing ?? null,
     ]);
     return this.normalizeReport(rows[0]);
   }
@@ -273,6 +278,7 @@ export class ReportRepository {
       latitude?: number | null;
       longitude?: number | null;
       description?: string | null;
+      clothing?: string | null;
     }
   ): Promise<ReportRecord | null> {
     const sql = `
@@ -284,8 +290,9 @@ export class ReportRepository {
         occurrence_date = COALESCE($5, occurrence_date),
         latitude = COALESCE($6, latitude),
         longitude = COALESCE($7, longitude),
-        description = COALESCE($8, description)
-      WHERE report_id = $9
+        description = COALESCE($8, description),
+        clothing = COALESCE($9, clothing)
+      WHERE report_id = $10
       RETURNING *
     `;
     const { rows } = await query(sql, [
@@ -297,6 +304,7 @@ export class ReportRepository {
       data.latitude ?? null,
       data.longitude ?? null,
       data.description ?? null,
+      data.clothing ?? null,
       reportId,
     ]);
     if (!rows[0]) return null;

@@ -46,6 +46,7 @@ export const reportRoutes: FastifyPluginAsync = async (fastify) => {
       latitude: body.latitude,
       longitude: body.longitude,
       description: body.description,
+      clothing: body.clothing,
     });
 
     return reply.status(201).send({ success: true, data: report });
@@ -88,6 +89,7 @@ export const reportRoutes: FastifyPluginAsync = async (fastify) => {
       latitude: body.latitude,
       longitude: body.longitude,
       description: body.description,
+      clothing: body.clothing,
     });
 
     return reply.send({ success: true, data: updated });

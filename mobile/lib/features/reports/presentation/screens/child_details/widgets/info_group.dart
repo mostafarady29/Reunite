@@ -61,7 +61,9 @@ class InfoGroup extends StatelessWidget {
             icon: Icons.checkroom_rounded,
             color: AppColors.secondary,
             label: context.tr('details.clothing'),
-            value: caseData.clothing,
+            value: caseData.clothing.isNotEmpty
+                ? caseData.clothing
+                : (context.locale.languageCode == 'ar' ? 'غير محدد' : 'Not specified'),
           ),
           if (caseData.distinguishingMarks != null) ...[
             const DetailsDivider(),

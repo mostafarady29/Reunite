@@ -35,6 +35,7 @@ export const reportBodySchema = z
     latitude: z.coerce.number().min(-90).max(90).nullable().optional(),
     longitude: z.coerce.number().min(-180).max(180).nullable().optional(),
     description: z.string().max(5000).nullable().optional(),
+    clothing: z.string().max(2000).nullable().optional(),
   })
   .transform((data) => {
     let lat = data.latitude ?? null;

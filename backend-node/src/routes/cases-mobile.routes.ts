@@ -94,6 +94,7 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
         lastKnownLocation: locationName || (item as any).lastKnownLocation || null,
         city: nearest?.name || (item as any).city || null,
         area: nearest?.governorate || (item as any).area || locationName || null,
+        clothing: item.clothing || null,
       };
     });
 
@@ -174,7 +175,8 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
       occurrenceDate: body.missingSince || body.occurrence_date || null,
       latitude: lat,
       longitude: lng,
-      description: body.description || body.clothing || null,
+      description: body.description || null,
+      clothing: body.clothing || null,
     });
 
     await attachPhotoIfProvided(report.report_id, body.photo || body.photoSeed);
@@ -220,7 +222,8 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
       occurrenceDate: body.foundSince || body.occurrence_date || null,
       latitude: lat,
       longitude: lng,
-      description: body.description || body.clothing || null,
+      description: body.description || null,
+      clothing: body.clothing || null,
     });
 
     await attachPhotoIfProvided(report.report_id, body.photo || body.photoSeed);
