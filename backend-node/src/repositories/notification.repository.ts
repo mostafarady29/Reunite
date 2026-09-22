@@ -10,13 +10,17 @@ export interface DeviceTokenRecord {
 }
 
 export interface NotificationRecord {
-  notification_id: number;
+  id?: number;
+  notification_id?: number;
   user_id: number | null;
   type: string;
-  title: string;
-  body: string;
-  case_id: number | null;
-  metadata: Record<string, any>;
+  title?: string | null;
+  body?: string | null;
+  case_id?: number | null;
+  report_id?: number | null;
+  report_name?: string | null;
+  report_kind?: string | null;
+  metadata?: Record<string, any>;
   is_read: boolean;
   created_at: string;
 }
@@ -66,8 +70,8 @@ export class NotificationRepository {
     metadata?: Record<string, any>;
   }): Promise<NotificationRecord> {
     const { rows } = await query<NotificationRecord>(
-      `INSERT INTO "notification" (user_id, type, title, body, case_id, metadata, is_read, created_at)
-       VALUES ($1, $2, $3, $4, $5, $6, false, NOW())
+      `INSERT INTO "notification" (user_id, type, title, body, case_id, report_id, metadata, is_read, created_at)
+       VALUES ($1, $2, $3, $4, $5, $5, $6, false, NOW())
        RETURNING *`,
       [
         data.userId ?? null,
@@ -81,28 +85,68 @@ export class NotificationRepository {
     return rows[0];
   }
 
+  public async getAllRecentNotifications(limit: number = 50): Promise<NotificationRecord[]> {
+    const { rows } = await query<NotificationRecord>(
+      `SELECT 
+         n.id AS notification_id,
+         n.id,
+         n.user_id,
+         n.type,
+         COALESCE(n.title, 'تنبيه') AS title,
+         COALESCE(n.body, '') AS body,
+         COALESCE(n.case_id, n.report_id) AS case_id,
+         COALESCE(n.report_id, n.case_id) AS report_id,
+         COALESCE(n.metadata, '{}'::jsonb) AS metadata,
+         n.is_read,
+         n.created_at,
+         r.name AS report_name,
+         r.kind AS report_kind,
+         r.latitude AS report_latitude,
+         r.longitude AS report_longitude
+       FROM "notification" n
+       LEFT JOIN report r ON r.report_id = COALESCE(n.report_id, n.case_id)
+       ORDER BY n.created_at DESC
+       LIMIT $1`,
+      [limit]
+    );
+    return rows;
+  }
+
   public async getNotificationsByUserId(
     userId: number | null,
     limit: number = 50
   ): Promise<NotificationRecord[]> {
     if (userId) {
       const { rows } = await query<NotificationRecord>(
-        `SELECT * FROM "notification"
-         WHERE user_id = $1 OR user_id IS NULL
-         ORDER BY created_at DESC
+        `SELECT 
+           n.id AS notification_id,
+           n.id,
+           n.user_id,
+           n.type,
+           COALESCE(n.title, 'تنبيه') AS title,
+           COALESCE(n.body, '') AS body,
+           COALESCE(n.case_id, n.report_id) AS case_id,
+           COALESCE(n.report_id, n.case_id) AS report_id,
+           COALESCE(n.metadata, '{}'::jsonb) AS metadata,
+           n.is_read,
+           n.created_at,
+           r.name AS report_name,
+           r.kind AS report_kind,
+           r.latitude AS report_latitude,
+           r.longitude AS report_longitude
+         FROM "notification" n
+         LEFT JOIN report r ON r.report_id = COALESCE(n.report_id, n.case_id)
+         WHERE n.user_id = $1 OR n.user_id IS NULL
+         ORDER BY n.created_at DESC
          LIMIT $2`,
         [userId, limit]
       );
-      return rows;
+      if (rows.length > 0) {
+        return rows;
+      }
+      return this.getAllRecentNotifications(limit);
     } else {
-      const { rows } = await query<NotificationRecord>(
-        `SELECT * FROM "notification"
-         WHERE user_id IS NULL
-         ORDER BY created_at DESC
-         LIMIT $1`,
-        [limit]
-      );
-      return rows;
+      return this.getAllRecentNotifications(limit);
     }
   }
 

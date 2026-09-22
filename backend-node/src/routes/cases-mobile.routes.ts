@@ -13,6 +13,8 @@ import { authenticate, optionalAuth } from '../middlewares/auth.middleware.js';
 import { NotFoundError, ValidationError } from '../core/errors/app-error.js';
 import { query } from '../core/database/pool.js';
 
+import { locationResolverService } from '../services/location-resolver.service.js';
+
 async function getEffectiveUserId(currentUserId?: number): Promise<number> {
   if (currentUserId) return currentUserId;
   const { rows } = await query<{ user_id: number }>('SELECT user_id FROM "User" ORDER BY user_id ASC LIMIT 1');
@@ -75,7 +77,24 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
       if (!isNaN(max)) items = items.filter((item) => (item.age ?? 0) <= max);
     }
 
-    return reply.send({ success: true, data: items });
+    const enrichedItems = items.map((item) => {
+      const nearest =
+        (item as any).nearest_place ||
+        (item.latitude && item.longitude
+          ? locationResolverService.getNearestPlace(Number(item.latitude), Number(item.longitude))
+          : null);
+      const locationName =
+        (item as any).location_name || nearest?.formatted || item.occurrence_location || null;
+
+      return {
+        ...item,
+        location_name: locationName,
+        nearest_location: locationName,
+        nearest_place: nearest,
+      };
+    });
+
+    return reply.send({ success: true, data: enrichedItems });
   });
 
   // 2. GET /cases/found
@@ -336,18 +355,37 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/notifications', { preHandler: [optionalAuth] }, async (request, reply) => {
     const userId = request.currentUser ? request.currentUser.user_id : null;
     const records = await notificationRepository.getNotificationsByUserId(userId);
-    const data = records.map((r) => ({
-      id: String(r.notification_id),
-      type: r.type,
-      titleKey: r.title,
-      title: r.title,
-      bodyKey: r.body,
-      body: r.body,
-      createdAt: r.created_at,
-      caseId: r.case_id ? String(r.case_id) : null,
-      namedArgs: r.metadata || {},
-      read: r.is_read,
-    }));
+    const data = records.map((r) => {
+      // Resolve nearest place from linked report coordinates if available
+      const reportLat = (r as any).report_latitude;
+      const reportLng = (r as any).report_longitude;
+      let nearestPlace = null;
+      let locationName = null;
+      if (reportLat != null && reportLng != null) {
+        nearestPlace = locationResolverService.getNearestPlace(
+          Number(reportLat),
+          Number(reportLng)
+        );
+        locationName = nearestPlace?.formatted || null;
+      }
+
+      return {
+        id: String(r.notification_id),
+        type: r.type,
+        titleKey: r.title,
+        title: r.title,
+        bodyKey: r.body,
+        body: r.body,
+        createdAt: r.created_at,
+        caseId: r.case_id ? String(r.case_id) : null,
+        reportName: r.report_name || null,
+        reportKind: r.report_kind || null,
+        locationName,
+        nearestPlace,
+        namedArgs: r.metadata || {},
+        read: r.is_read,
+      };
+    });
     return reply.send({ success: true, data });
   });
 
