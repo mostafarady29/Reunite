@@ -34,8 +34,8 @@ export class AgentMemoryService {
    * Convert an array of numbers (float32) to a binary Buffer for storage in BYTEA column
    */
   public vectorToBuffer(vector: number[]): Buffer {
-    if (vector.length !== this.dimension) {
-      throw new ValidationError(`Vector dimension mismatch. Expected ${this.dimension}, got ${vector.length}`);
+    if (!Array.isArray(vector) || vector.length < 32) {
+      throw new ValidationError(`Vector dimension mismatch. Expected valid float array, got ${vector?.length ?? 0}`);
     }
     const floatArray = new Float32Array(vector);
     return Buffer.from(floatArray.buffer);
@@ -139,11 +139,12 @@ export class AgentMemoryService {
       applyRecencyDecay = false,
     } = options;
 
-    if (queryEmbedding.length !== this.dimension) {
-      throw new ValidationError(`Query vector dimension mismatch. Expected ${this.dimension}`);
+    if (!queryEmbedding || queryEmbedding.length < 32) {
+      throw new ValidationError(`Query vector dimension mismatch. Expected valid float array`);
     }
 
     const queryVector = new Float32Array(queryEmbedding);
+    const queryDim = queryVector.length;
 
     // Pre-filtering query to ensure candidate memory matches active context
     const whereConditions = ['r.status = $1'];
@@ -175,7 +176,7 @@ export class AgentMemoryService {
 
     for (const row of rows) {
       const candidateVector = this.bufferToVector(row.vector);
-      if (candidateVector.length !== this.dimension) continue;
+      if (candidateVector.length !== queryDim) continue;
 
       const similarity = this.cosineSimilarity(queryVector, candidateVector);
       if (similarity < threshold) continue;
@@ -231,7 +232,7 @@ export class AgentMemoryService {
     const endpoint = env.AI_SERVICE_URL
       ? `${env.AI_SERVICE_URL.replace(/\/$/, '')}/api${env.AI_API_NAME}`
       : env.AI_SPACE
-        ? `https://${env.AI_SPACE.replace('/', '-')}.hf.space/api${env.AI_API_NAME}`
+        ? `https://${env.AI_SPACE.replace('/', '-').toLowerCase()}.hf.space/api${env.AI_API_NAME}`
         : null;
 
     if (!endpoint) {
@@ -268,8 +269,8 @@ export class AgentMemoryService {
         rawEmbedding = rawEmbedding.embedding;
       }
 
-      if (!Array.isArray(rawEmbedding) || rawEmbedding.length !== this.dimension) {
-        throw new ValidationError(`Invalid embedding received from model. Expected ${this.dimension} floats`);
+      if (!Array.isArray(rawEmbedding) || rawEmbedding.length < 32) {
+        throw new ValidationError(`Invalid embedding received from model. Expected float array`);
       }
 
       return rawEmbedding.map(Number);
@@ -296,81 +297,89 @@ export class AgentMemoryService {
       timeGapHours: number;
     }>
   > {
-    // 1. Get embedding for the source case
-    const sql = `
-      SELECT e.vector, r.kind, r.latitude, r.longitude, r.occurrence_date, r.created_at
-      FROM embedding e
-      JOIN photo p ON p.photo_id = e.photo_id
-      JOIN report r ON r.report_id = p.report_id
-      WHERE r.report_id = $1
-      LIMIT 1
-    `;
-    const { rows } = await query(sql, [caseId]);
-    if (!rows[0]) {
-      return [];
-    }
-
-    const source = rows[0];
-    const sourceVector = Array.from(this.bufferToVector(source.vector));
-    const targetKind = source.kind === 'MISSING' ? 'FOUND' : 'MISSING';
-
-    const matches = await this.searchSimilarMemories(sourceVector, {
-      limit,
-      threshold: 0.25,
-      status: 'OPEN',
-      kind: targetKind,
-      applyRecencyDecay: true,
-    });
-
-    const results = [];
-    for (const match of matches) {
-      const candidateId = match.metadata.report_id;
-      const { rows: cRows } = await query(
-        `SELECT r.*,
-          COALESCE(
-            json_agg(
-              json_build_object('id', p.photo_id, 'path', p.path)
-            ) FILTER (WHERE p.photo_id IS NOT NULL),
-            '[]'
-          ) AS photos
-        FROM report r
-        LEFT JOIN photo p ON p.report_id = r.report_id
+    try {
+      // 1. Get embedding for the source case
+      const sql = `
+        SELECT e.vector, r.kind, r.latitude, r.longitude, r.occurrence_date, r.created_at
+        FROM embedding e
+        JOIN photo p ON p.photo_id = e.photo_id
+        JOIN report r ON r.report_id = p.report_id
         WHERE r.report_id = $1
-        GROUP BY r.report_id`,
-        [candidateId]
-      );
-      if (!cRows[0]) continue;
-
-      const candidate = cRows[0];
-      let distanceMeters = 0;
-      if (
-        source.latitude &&
-        source.longitude &&
-        candidate.latitude &&
-        candidate.longitude
-      ) {
-        const distKm = this.calculateHaversineDistance(
-          Number(source.latitude),
-          Number(source.longitude),
-          Number(candidate.latitude),
-          Number(candidate.longitude)
-        );
-        distanceMeters = Math.round(distKm * 1000);
+        LIMIT 1
+      `;
+      const { rows } = await query(sql, [caseId]);
+      if (!rows[0] || !rows[0].vector) {
+        return [];
       }
 
-      const t1 = new Date(source.occurrence_date || source.created_at).getTime();
-      const t2 = new Date(candidate.occurrence_date || candidate.created_at).getTime();
-      const timeGapHours = Math.round(Math.abs(t1 - t2) / (1000 * 60 * 60));
+      const source = rows[0];
+      const sourceVector = Array.from(this.bufferToVector(source.vector));
+      if (!sourceVector || sourceVector.length < 32) {
+        return [];
+      }
+      const targetKind = source.kind === 'MISSING' ? 'FOUND' : 'MISSING';
 
-      results.push({
-        foundCase: candidate,
-        matchPercent: Math.round(match.similarity * 100),
-        distanceMeters,
-        timeGapHours,
+      const matches = await this.searchSimilarMemories(sourceVector, {
+        limit,
+        threshold: 0.25,
+        status: 'OPEN',
+        kind: targetKind,
+        applyRecencyDecay: true,
       });
-    }
 
-    return results;
+      const results = [];
+      for (const match of matches) {
+        const candidateId = match.metadata.report_id;
+        const { rows: cRows } = await query(
+          `SELECT r.*,
+            COALESCE(
+              json_agg(
+                json_build_object('id', p.photo_id, 'path', p.path)
+              ) FILTER (WHERE p.photo_id IS NOT NULL),
+              '[]'
+            ) AS photos
+          FROM report r
+          LEFT JOIN photo p ON p.report_id = r.report_id
+          WHERE r.report_id = $1
+          GROUP BY r.report_id`,
+          [candidateId]
+        );
+        if (!cRows[0]) continue;
+
+        const candidate = cRows[0];
+        let distanceMeters = 0;
+        if (
+          source.latitude &&
+          source.longitude &&
+          candidate.latitude &&
+          candidate.longitude
+        ) {
+          const distKm = this.calculateHaversineDistance(
+            Number(source.latitude),
+            Number(source.longitude),
+            Number(candidate.latitude),
+            Number(candidate.longitude)
+          );
+          distanceMeters = Math.round(distKm * 1000);
+        }
+
+        const t1 = new Date(source.occurrence_date || source.created_at).getTime();
+        const t2 = new Date(candidate.occurrence_date || candidate.created_at).getTime();
+        const timeGapHours = Math.round(Math.abs(t1 - t2) / (1000 * 60 * 60));
+
+        results.push({
+          foundCase: candidate,
+          matchPercent: Math.round(match.similarity * 100),
+          distanceMeters,
+          timeGapHours,
+        });
+      }
+
+      return results;
+    } catch (err: any) {
+      console.warn(`Error finding possible matches for case ${caseId}:`, err?.message);
+      return [];
+    }
   }
 
   /**

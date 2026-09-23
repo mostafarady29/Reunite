@@ -147,8 +147,16 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
   // 6. GET /cases/:id/matches
   fastify.get<{ Params: { id: string } }>('/cases/:id/matches', async (request, reply) => {
     const id = parseInt(request.params.id, 10);
-    const matches = await agentMemoryService.findPossibleMatchesForCase(id);
-    return reply.send({ success: true, data: matches });
+    if (isNaN(id)) {
+      return reply.send({ success: true, data: [] });
+    }
+    try {
+      const matches = await agentMemoryService.findPossibleMatchesForCase(id);
+      return reply.send({ success: true, data: matches });
+    } catch (err: any) {
+      request.log.warn(`findPossibleMatchesForCase error for case ${id}: ${err?.message}`);
+      return reply.send({ success: true, data: [] });
+    }
   });
 
   // 7. POST /cases/missing

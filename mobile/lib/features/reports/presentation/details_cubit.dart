@@ -52,9 +52,14 @@ class DetailsCubit extends Cubit<DetailsState> {
     emit(const DetailsLoading());
     try {
       final caseData = await _repo.getById(caseId);
-      final matches = caseData.isMissing
-          ? await _repo.getPossibleMatches(caseId)
-          : const <PossibleMatch>[];
+      List<PossibleMatch> matches = const [];
+      if (caseData.isMissing) {
+        try {
+          matches = await _repo.getPossibleMatches(caseId);
+        } catch (_) {
+          matches = const [];
+        }
+      }
       emit(DetailsLoaded(caseData: caseData, matches: matches));
     } on AppFailure catch (e) {
       emit(DetailsError(e));
