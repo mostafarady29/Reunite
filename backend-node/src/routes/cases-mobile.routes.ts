@@ -383,13 +383,48 @@ export const casesMobileRoutes: FastifyPluginAsync = async (fastify) => {
         locationName = nearestPlace?.formatted || null;
       }
 
+      // Generate clean title & body if missing or generic in database
+      let title = r.title;
+      let body = r.body;
+      const isMissingType = r.type === 'missing_report_nearby' || r.type === 'emergency';
+      const isFoundType = r.type === 'found_report_nearby';
+      const isMatch = r.type === 'possibleMatch' || r.type === 'possible_match';
+
+      if (!title || title === 'تنبيه' || title.trim() === '') {
+        if (isMissingType) {
+          title = 'تنبيه طفل مفقود عاجل';
+        } else if (isFoundType) {
+          title = 'تم العثور على طفل بالقرب منك';
+        } else if (isMatch) {
+          title = 'تطابق محتمل لحالة طفل!';
+        } else {
+          title = 'تحديث بشأن الحالة';
+        }
+      }
+
+      if (!body || body.trim() === '') {
+        const nameText = r.report_name ? ` (${r.report_name})` : '';
+        const locText = locationName ? ` بالقرب من ${locationName}` : '';
+        if (isMissingType) {
+          body = `تم الإبلاغ عن اختفاء طفل${nameText}${locText}. الرجاء المساعدة بالبحث.`;
+        } else if (isFoundType) {
+          body = `تم الإبلاغ عن العثور على طفل${nameText}${locText}. هل تتعرف عليه؟`;
+        } else if (isMatch) {
+          body = `تم رصد تطابق محتمل مع بيانات أحد البلاغات المسجلة${nameText}.`;
+        } else {
+          body = `تم تسجيل تحديث جديد على البلاغ${nameText}.`;
+        }
+      }
+
+      const mobileType = isMissingType ? 'emergency' : isMatch ? 'possibleMatch' : isFoundType ? 'caseUpdate' : r.type;
+
       return {
         id: String(r.notification_id),
-        type: r.type,
-        titleKey: r.title,
-        title: r.title,
-        bodyKey: r.body,
-        body: r.body,
+        type: mobileType,
+        titleKey: title,
+        title,
+        bodyKey: body,
+        body,
         createdAt: r.created_at,
         caseId: r.case_id ? String(r.case_id) : null,
         reportName: r.report_name || null,

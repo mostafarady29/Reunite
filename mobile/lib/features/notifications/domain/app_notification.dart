@@ -50,11 +50,13 @@ class AppNotification {
   factory AppNotification.fromJson(Map<String, dynamic> json) {
     AppNotificationType type;
     final rawType = json['type'] as String?;
-    try {
-      type = rawType == null
-          ? AppNotificationType.caseUpdate
-          : AppNotificationType.values.byName(rawType);
-    } catch (_) {
+    if (rawType == 'emergency' || rawType == 'missing_report_nearby') {
+      type = AppNotificationType.emergency;
+    } else if (rawType == 'possibleMatch' || rawType == 'possible_match') {
+      type = AppNotificationType.possibleMatch;
+    } else if (rawType == 'success') {
+      type = AppNotificationType.success;
+    } else {
       type = AppNotificationType.caseUpdate;
     }
     return AppNotification(

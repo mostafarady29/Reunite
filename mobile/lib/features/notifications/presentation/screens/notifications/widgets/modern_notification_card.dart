@@ -96,14 +96,14 @@ class VeryModernCard extends StatelessWidget {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                         decoration: BoxDecoration(color: AppColors.emergency.withValues(alpha: 0.09), borderRadius: BorderRadius.circular(100)),
-                                        child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.warning_amber_rounded, size: 11, color: AppColors.emergency), const SizedBox(width: 3), Text('Urgent', style: context.textTheme.labelSmall?.copyWith(color: AppColors.emergency, fontWeight: FontWeight.w800, fontSize: 10))]),
+                                        child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.warning_amber_rounded, size: 11, color: AppColors.emergency), const SizedBox(width: 3), Text(context.tr('notifications.urgent'), style: context.textTheme.labelSmall?.copyWith(color: AppColors.emergency, fontWeight: FontWeight.w800, fontSize: 10))]),
                                       ),
                                     if (isEmergency) const SizedBox(width: 8),
                                     if (notification.caseId != null)
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
                                         decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(100)),
-                                        child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.visibility_outlined, size: 13, color: AppColors.primary), const SizedBox(width: 4), Text('View', style: context.textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: 11))]),
+                                        child: Row(mainAxisSize: MainAxisSize.min, children: [Icon(Icons.visibility_outlined, size: 13, color: AppColors.primary), const SizedBox(width: 4), Text(context.tr('notifications.view'), style: context.textTheme.labelSmall?.copyWith(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: 11))]),
                                       ),
                                     const Spacer(),
                                     Container(
